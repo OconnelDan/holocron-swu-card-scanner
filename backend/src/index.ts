@@ -7,10 +7,10 @@ import { logger } from './utils';
 async function main(): Promise<void> {
   try {
     logger.info('🚀 Iniciando Holocron SWU Card Scanner Backend...');
-    
+
     const app = new App();
     await app.start();
-    
+
   } catch (error) {
     logger.error('❌ Error fatal iniciando aplicación:', error);
     process.exit(1);

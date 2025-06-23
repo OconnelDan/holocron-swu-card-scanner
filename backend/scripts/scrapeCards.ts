@@ -11,21 +11,21 @@ import { CardScrapingService } from '../src/services/CardScrapingService';
 async function main(): Promise<void> {
   try {
     logger.info('=== Iniciando script de scraping de cartas ===');
-    
+
     // Conectamos a la base de datos
     await connectToDatabase();
-    
+
     // Creamos instancia del servicio
     const scrapingService = new CardScrapingService();
-    
+
     // Ejecutamos scraping completo
     const results = await scrapingService.runFullScrape();
-    
+
     logger.info('=== Scraping completado exitosamente ===', {
       cartasSwudb: results.swudbCount,
       cartasEnriquecidas: results.officialCount,
     });
-    
+
   } catch (error) {
     logger.error('Error ejecutando script de scraping:', error);
     process.exit(1);

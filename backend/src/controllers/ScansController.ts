@@ -43,7 +43,7 @@ export class ScansController {
   static async createScan(req: Request, res: Response): Promise<void> {
     try {
       const scanData = req.body as ScanRequestBody;
-      
+
       // Validaciones básicas
       if (!scanData.cardId || !mongoose.Types.ObjectId.isValid(scanData.cardId)) {
         res.status(400).json({
@@ -52,7 +52,7 @@ export class ScansController {
         });
         return;
       }
-      
+
       if (!scanData.confidence || scanData.confidence < 0 || scanData.confidence > 1) {
         res.status(400).json({
           error: 'Confianza inválida',
@@ -60,7 +60,7 @@ export class ScansController {
         });
         return;
       }
-      
+
       // Verificamos que la carta existe
       const card = await Card.findById(scanData.cardId);
       if (!card) {
@@ -70,19 +70,19 @@ export class ScansController {
         });
         return;
       }
-      
+
       // Determinamos el estado del escaneo
       let status: IScan['status'] = 'success';
       if (scanData.confidence < config.ml.confidenceThreshold) {
         status = 'low_confidence';
       }
-      
+
       // Procesamos predicciones alternativas
       const alternativePredictions = scanData.alternativePredictions?.map(pred => ({
         cardId: new mongoose.Types.ObjectId(pred.cardId),
         confidence: pred.confidence,
       }));
-      
+
       // Creamos el documento de escaneo
       const scanDoc: Partial<IScan> = {
         cardId: new mongoose.Types.ObjectId(scanData.cardId),
@@ -95,13 +95,13 @@ export class ScansController {
         status,
         scannedAt: new Date(),
       };
-      
+
       const scan = new Scan(scanDoc);
       await scan.save();
-      
+
       // Populamos la carta para la respuesta
       await scan.populate('cardId', 'name subtitle rarity type imageUrl');
-      
+
       logger.info('Nuevo escaneo registrado', {
         scanId: scan._id,
         cardId: scanData.cardId,
@@ -109,7 +109,7 @@ export class ScansController {
         status,
         platform: scanData.deviceInfo.platform,
       });
-      
+
       res.status(201).json({
         message: 'Escaneo registrado exitosamente',
         scan: {
@@ -120,7 +120,7 @@ export class ScansController {
           scannedAt: scan.scannedAt,
         },
       });
-      
+
     } catch (error) {
       logger.error('Error creando escaneo:', error);
       res.status(500).json({
@@ -168,7 +168,7 @@ export class ScansController {
           { $sort: { count: -1 } },
         ]),
       ]);
-      
+
       const stats = {
         total: totalScans,
         successful: successfulScans,
@@ -188,9 +188,9 @@ export class ScansController {
           return acc;
         }, {} as Record<string, number>),
       };
-      
+
       res.status(200).json({ stats });
-      
+
     } catch (error) {
       logger.error('Error obteniendo estadísticas:', error);
       res.status(500).json({
@@ -208,7 +208,7 @@ export class ScansController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
       const skip = (page - 1) * limit;
-      
+
       const scans = await Scan.find()
         .populate('cardId', 'name subtitle rarity type imageUrl')
         .select('-__v')
@@ -216,10 +216,10 @@ export class ScansController {
         .skip(skip)
         .limit(limit)
         .lean();
-      
+
       const total = await Scan.countDocuments();
       const totalPages = Math.ceil(total / limit);
-      
+
       res.status(200).json({
         scans,
         pagination: {
@@ -231,7 +231,7 @@ export class ScansController {
           hasPrev: page > 1,
         },
       });
-      
+
     } catch (error) {
       logger.error('Error obteniendo escaneos:', error);
       res.status(500).json({

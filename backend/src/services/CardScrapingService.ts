@@ -52,7 +52,7 @@ export class CardScrapingService {
   async fetchCardsFromSwudb(): Promise<SwudbCardData[]> {
     try {
       logger.info('Iniciando fetch de cartas desde SWUDB API');
-      
+
       const response = await axios.get(`${config.swudb.baseUrl}/cards`, {
         timeout: 30000,
         headers: {
@@ -60,14 +60,14 @@ export class CardScrapingService {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         throw new Error('Respuesta inválida de SWUDB API');
       }
-      
+
       logger.info(`Obtenidas ${response.data.length} cartas desde SWUDB`);
       return response.data;
-      
+
     } catch (error) {
       logger.error('Error fetching cards from SWUDB:', error);
       throw new Error(`Error obteniendo cartas de SWUDB: ${error}`);
@@ -110,38 +110,38 @@ export class CardScrapingService {
   async scrapeOfficialWebsite(): Promise<OfficialCardData[]> {
     try {
       logger.info('Iniciando scraping de web oficial de SWU');
-      
+
       await this.initBrowser();
       const page = await this.browser!.newPage();
-      
+
       // Configuramos user agent y viewport
       await page.setUserAgent(config.scraping.userAgent);
       await page.setViewport({ width: 1920, height: 1080 });
-      
+
       // Navegamos a la página de cartas
       await page.goto(config.scraping.officialSiteUrl, {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
-      
+
       // Esperamos a que cargue el contenido dinámico
       await page.waitForSelector('[data-testid="card-grid"]', { timeout: 10000 });
-      
+
       // Simulamos scroll para cargar más cartas (lazy loading)
       await this.autoScroll(page);
-      
+
       // Obtenemos el HTML procesado
       const content = await page.content();
       const $ = cheerio.load(content);
-      
+
       const officialCards: OfficialCardData[] = [];
-      
+
       // Parseamos las cartas usando selectores CSS
       $('[data-testid="card-item"]').each((_, element) => {
         const cardElement = $(element);
         const cardNumber = cardElement.find('[data-testid="card-number"]').text().trim();
         const cardUrl = cardElement.find('a').attr('href');
-        
+
         if (cardNumber && cardUrl) {
           officialCards.push({
             cardNumber,
@@ -149,12 +149,12 @@ export class CardScrapingService {
           });
         }
       });
-      
+
       await page.close();
-      
+
       logger.info(`Scrapeadas ${officialCards.length} cartas desde web oficial`);
       return officialCards;
-      
+
     } catch (error) {
       logger.error('Error scraping official website:', error);
       throw new Error(`Error scrapeando web oficial: ${error}`);
@@ -190,7 +190,7 @@ export class CardScrapingService {
     try {
       const swudbCards = await this.fetchCardsFromSwudb();
       let updatedCount = 0;
-      
+
       for (const cardData of swudbCards) {
         const cardDoc: Partial<ICard> = {
           swudbId: cardData.id,
@@ -217,19 +217,19 @@ export class CardScrapingService {
             source: 'swudb',
           },
         };
-        
+
         await Card.findOneAndUpdate(
           { swudbId: cardData.id },
           cardDoc,
           { upsert: true, new: true }
         );
-        
+
         updatedCount++;
       }
-      
+
       logger.info(`Actualizadas ${updatedCount} cartas desde SWUDB`);
       return updatedCount;
-      
+
     } catch (error) {
       logger.error('Error updating cards from SWUDB:', error);
       throw error;
@@ -243,7 +243,7 @@ export class CardScrapingService {
     try {
       const officialCards = await this.scrapeOfficialWebsite();
       let enrichedCount = 0;
-      
+
       for (const officialCard of officialCards) {
         const result = await Card.findOneAndUpdate(
           { cardNumber: officialCard.cardNumber },
@@ -255,15 +255,15 @@ export class CardScrapingService {
           },
           { new: true }
         );
-        
+
         if (result) {
           enrichedCount++;
         }
       }
-      
+
       logger.info(`Enriquecidas ${enrichedCount} cartas con datos oficiales`);
       return enrichedCount;
-      
+
     } catch (error) {
       logger.error('Error enriching with official data:', error);
       throw error;
@@ -278,17 +278,17 @@ export class CardScrapingService {
   async runFullScrape(): Promise<{ swudbCount: number; officialCount: number }> {
     try {
       logger.info('Iniciando proceso completo de scraping');
-      
+
       const swudbCount = await this.updateCardsFromSwudb();
       const officialCount = await this.enrichWithOfficialData();
-      
+
       logger.info('Proceso de scraping completado', {
         swudbCards: swudbCount,
         officiallyEnriched: officialCount,
       });
-      
+
       return { swudbCount, officialCount };
-      
+
     } catch (error) {
       logger.error('Error en proceso completo de scraping:', error);
       throw error;

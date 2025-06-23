@@ -4,12 +4,12 @@ import helmet from 'helmet';
 import compression from 'compression';
 import * as cron from 'node-cron';
 
-import { 
-  config, 
-  logger, 
-  validateConfig, 
-  connectToDatabase, 
-  setupDatabaseEventListeners 
+import {
+  config,
+  logger,
+  validateConfig,
+  connectToDatabase,
+  setupDatabaseEventListeners
 } from './utils';
 import { healthRoutes, cardsRoutes, scansRoutes } from './routes';
 import { CardScrapingService } from './services';
@@ -24,7 +24,7 @@ class App {
   constructor() {
     this.app = express();
     this.scrapingService = new CardScrapingService();
-    
+
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -80,7 +80,7 @@ class App {
   private initializeRoutes(): void {
     // Health checks (sin /api prefix)
     this.app.use('/', healthRoutes);
-    
+
     // API routes
     this.app.use('/api/cards', cardsRoutes);
     this.app.use('/api/scans', scansRoutes);
@@ -126,7 +126,7 @@ class App {
       res.status(500).json({
         error: 'Error interno del servidor',
         message: 'Ha ocurrido un error inesperado',
-        ...(process.env.NODE_ENV === 'development' && { 
+        ...(process.env.NODE_ENV === 'development' && {
           details: error.message,
           stack: error.stack,
         }),
@@ -186,11 +186,11 @@ class App {
     try {
       // Validamos configuración
       validateConfig();
-      
+
       // Conectamos a MongoDB
       await connectToDatabase();
       setupDatabaseEventListeners();
-      
+
       // Iniciamos servidor HTTP
       this.app.listen(config.port, () => {
         logger.info('Servidor iniciado correctamente', {
@@ -199,7 +199,7 @@ class App {
           mongoUri: config.mongodb.uri.replace(/\/\/.*@/, '//***:***@'), // Ocultar credenciales
         });
       });
-      
+
     } catch (error) {
       logger.error('Error iniciando servidor:', error);
       process.exit(1);

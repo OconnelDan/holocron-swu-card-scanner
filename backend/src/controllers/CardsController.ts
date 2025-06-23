@@ -14,29 +14,29 @@ export class CardsController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
       const skip = (page - 1) * limit;
-      
+
       // Filtros opcionales
       const filters: Record<string, unknown> = {};
-      
+
       if (req.query.set) {
         filters.setCode = req.query.set;
       }
-      
+
       if (req.query.type) {
         filters.type = req.query.type;
       }
-      
+
       if (req.query.rarity) {
         filters.rarity = req.query.rarity;
       }
-      
+
       if (req.query.search) {
         filters.$or = [
           { name: { $regex: req.query.search, $options: 'i' } },
           { subtitle: { $regex: req.query.search, $options: 'i' } },
         ];
       }
-      
+
       const [cards, total] = await Promise.all([
         Card.find(filters)
           .select('-__v')
@@ -46,9 +46,9 @@ export class CardsController {
           .lean(),
         Card.countDocuments(filters),
       ]);
-      
+
       const totalPages = Math.ceil(total / limit);
-      
+
       res.status(200).json({
         cards,
         pagination: {
@@ -60,7 +60,7 @@ export class CardsController {
           hasPrev: page > 1,
         },
       });
-      
+
     } catch (error) {
       logger.error('Error obteniendo cartas:', error);
       res.status(500).json({
@@ -76,9 +76,9 @@ export class CardsController {
   static async getCardById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const card = await Card.findById(id).select('-__v').lean();
-      
+
       if (!card) {
         res.status(404).json({
           error: 'Carta no encontrada',
@@ -86,9 +86,9 @@ export class CardsController {
         });
         return;
       }
-      
+
       res.status(200).json({ card });
-      
+
     } catch (error) {
       logger.error('Error obteniendo carta por ID:', error);
       res.status(500).json({
@@ -104,7 +104,7 @@ export class CardsController {
   static async searchCards(req: Request, res: Response): Promise<void> {
     try {
       const { q } = req.query;
-      
+
       if (!q || typeof q !== 'string') {
         res.status(400).json({
           error: 'Parámetro de búsqueda requerido',
@@ -112,7 +112,7 @@ export class CardsController {
         });
         return;
       }
-      
+
       const cards = await Card.find({
         $or: [
           { name: { $regex: q, $options: 'i' } },
@@ -125,13 +125,13 @@ export class CardsController {
         .select('-__v')
         .limit(50)
         .lean();
-      
+
       res.status(200).json({
         query: q,
         results: cards.length,
         cards,
       });
-      
+
     } catch (error) {
       logger.error('Error buscando cartas:', error);
       res.status(500).json({

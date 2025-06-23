@@ -10,11 +10,11 @@ const mongooseOptions: mongoose.ConnectOptions = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
-  
+
   // Configuración de buffer
   bufferMaxEntries: 0,
   bufferCommands: false,
-  
+
   // Configuración de retry
   retryWrites: true,
   retryReads: true,
@@ -26,9 +26,9 @@ const mongooseOptions: mongoose.ConnectOptions = {
 export async function connectToDatabase(): Promise<void> {
   try {
     const uri = isTest() ? config.mongodb.testUri : config.mongodb.uri;
-    
+
     await mongoose.connect(uri, mongooseOptions);
-    
+
     logger.info('Conexión a MongoDB establecida correctamente', {
       database: mongoose.connection.name,
       host: mongoose.connection.host,
@@ -89,15 +89,15 @@ export async function clearDatabase(): Promise<void> {
   if (!isTest()) {
     throw new Error('clearDatabase solo puede usarse en entorno de test');
   }
-  
+
   const collections = mongoose.connection.collections;
-  
+
   for (const key in collections) {
     const collection = collections[key];
     if (collection) {
       await collection.deleteMany({});
     }
   }
-  
+
   logger.info('Base de datos de test limpiada');
 }

@@ -31,7 +31,7 @@ describe('CardScrapingService', () => {
       ]);
 
       const cards = await scrapingService.fetchCardsFromSwudb();
-      
+
       expect(cards).toHaveLength(1);
       expect(cards[0]).toEqual(
         expect.objectContaining({
@@ -78,9 +78,9 @@ describe('CardScrapingService', () => {
       ]);
 
       const updatedCount = await scrapingService.updateCardsFromSwudb();
-      
+
       expect(updatedCount).toBe(1);
-      
+
       // Verificamos que la carta se guardó en la DB
       const savedCard = await Card.findOne({ swudbId: 'test-card-1' });
       expect(savedCard).toBeTruthy();

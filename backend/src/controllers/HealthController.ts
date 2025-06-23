@@ -18,12 +18,12 @@ export class HealthController {
         version: process.env.npm_package_version || '1.0.0',
         database: 'connected', // TODO: verificar conexión real
       };
-      
+
       logger.info('Health check solicitado', {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
       });
-      
+
       res.status(200).json(healthInfo);
     } catch (error) {
       logger.error('Error en health check:', error);
@@ -49,7 +49,7 @@ export class HealthController {
           scraping: 'ok',
         },
       };
-      
+
       res.status(200).json(readyInfo);
     } catch (error) {
       logger.error('Error en ready check:', error);
