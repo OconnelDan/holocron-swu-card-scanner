@@ -1,0 +1,2 @@
+# Directorio para modelos de TensorFlow
+# Los archivos .pb, .json, .bin serán ignorados por git

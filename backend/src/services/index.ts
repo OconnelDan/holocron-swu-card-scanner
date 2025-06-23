@@ -1,0 +1,1 @@
+export { CardScrapingService } from './CardScrapingService';

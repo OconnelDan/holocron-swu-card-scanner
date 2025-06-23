@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # ================================
+  # Base de datos MongoDB
+  # ================================
+  mongodb:
+    image: mongo:6.0
+    container_name: holocron-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: holocron
+      MONGO_INITDB_ROOT_PASSWORD: swu_scanner_2024
+      MONGO_INITDB_DATABASE: holocron-swu
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - holocron-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ================================
+  # Backend de la aplicación
+  # ================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: holocron-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGODB_URI: mongodb://holocron:swu_scanner_2024@mongodb:27017/holocron-swu?authSource=admin
+      SWUDB_API_BASE_URL: https://api.swudb.com/v1
+      SCRAPE_SCHEDULE: "0 0 * * *"
+      TF_CONFIDENCE_THRESHOLD: 0.7
+      LOG_LEVEL: info
+      CORS_ORIGIN: "*"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./logs:/app/logs
+      - ./models:/app/models
+    networks:
+      - holocron-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ================================
+  # MongoDB Express (opcional, para desarrollo)
+  # ================================
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: holocron-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: holocron
+      ME_CONFIG_MONGODB_ADMINPASSWORD: swu_scanner_2024
+      ME_CONFIG_MONGODB_URL: mongodb://holocron:swu_scanner_2024@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    networks:
+      - holocron-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    profiles:
+      - dev
+
+# ================================
+# Volúmenes persistentes
+# ================================
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+# ================================
+# Red interna
+# ================================
+networks:
+  holocron-network:
+    driver: bridge
