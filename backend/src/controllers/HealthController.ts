@@ -14,8 +14,8 @@ export class HealthController {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env['NODE_ENV'] || 'development',
+        version: process.env['npm_package_version'] || '1.0.0',
         database: 'connected', // TODO: verificar conexión real
       };
 
@@ -33,11 +33,10 @@ export class HealthController {
       });
     }
   }
-
   /**
    * Ready check más exhaustivo
    */
-  static async getReady(req: Request, res: Response): Promise<void> {
+  static async getReady(_req: Request, res: Response): Promise<void> {
     try {
       // TODO: Aquí verificaremos conexión DB, modelos TF, etc.
       const readyInfo = {

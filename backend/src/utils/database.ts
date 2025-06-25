@@ -11,10 +11,6 @@ const mongooseOptions: mongoose.ConnectOptions = {
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
 
-  // Configuración de buffer
-  bufferMaxEntries: 0,
-  bufferCommands: false,
-
   // Configuración de retry
   retryWrites: true,
   retryReads: true,

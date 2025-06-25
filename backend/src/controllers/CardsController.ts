@@ -1,39 +1,38 @@
 import { Request, Response } from 'express';
-import { Card, Scan } from '../models';
+import { Card } from '../models';
 import { logger } from '../utils';
 
 /**
  * Controller para operaciones con cartas
  */
-export class CardsController {
-  /**
+export class CardsController {  /**
    * Obtiene todas las cartas con paginación
    */
   static async getCards(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+      const page = parseInt((req.query['page'] as string) ?? '1', 10) || 1;
+      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 100);
       const skip = (page - 1) * limit;
 
       // Filtros opcionales
       const filters: Record<string, unknown> = {};
 
-      if (req.query.set) {
-        filters.setCode = req.query.set;
+      if (req.query['set']) {
+        filters['setCode'] = req.query['set'];
       }
 
-      if (req.query.type) {
-        filters.type = req.query.type;
+      if (req.query['type']) {
+        filters['type'] = req.query['type'];
       }
 
-      if (req.query.rarity) {
-        filters.rarity = req.query.rarity;
+      if (req.query['rarity']) {
+        filters['rarity'] = req.query['rarity'];
       }
 
-      if (req.query.search) {
-        filters.$or = [
-          { name: { $regex: req.query.search, $options: 'i' } },
-          { subtitle: { $regex: req.query.search, $options: 'i' } },
+      if (req.query['search']) {
+        filters['$or'] = [
+          { name: { $regex: req.query['search'], $options: 'i' } },
+          { subtitle: { $regex: req.query['search'], $options: 'i' } },
         ];
       }
 
@@ -97,13 +96,12 @@ export class CardsController {
       });
     }
   }
-
   /**
    * Busca cartas por texto
    */
   static async searchCards(req: Request, res: Response): Promise<void> {
     try {
-      const { q } = req.query;
+      const q = req.query['q'];
 
       if (!q || typeof q !== 'string') {
         res.status(400).json({

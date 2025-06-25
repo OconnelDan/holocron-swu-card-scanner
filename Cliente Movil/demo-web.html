@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holocron SWU Card Scanner - Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
+
+    .phone-container {
+      max-width: 375px;
+      margin: 20px auto;
+      background: #000;
+      border-radius: 25px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      min-height: 667px;
+      position: relative;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #aaa;
+      font-size: 16px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .button {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      background: linear-gradient(45deg, #1e3c72, #2a5298);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .button:hover {
+      background: linear-gradient(45deg, #2a5298, #1e3c72);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .button.primary {
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .card:hover {
+      border-color: #FFD700;
+      transform: scale(1.05);
+    }
+
+    .card-image {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(45deg, #333, #555);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 12px;
+    }
+
+    .card-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #FFD700;
+    }
+
+    .card-stats {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 70px;
+      left: 20px;
+      background: none;
+      border: none;
+      color: #FFD700;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .camera-preview {
+      width: 100%;
+      height: 300px;
+      background: #000;
+      border-radius: 10px;
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #333;
+      position: relative;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 140px;
+      border: 2px solid #FFD700;
+      border-radius: 10px;
+    }
+
+    .scan-instructions {
+      text-align: center;
+      margin: 20px 0;
+      color: #aaa;
+    }
+
+    .navigation {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      border-radius: 25px;
+      padding: 10px 20px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-button {
+      background: none;
+      border: none;
+      color: #aaa;
+      padding: 10px;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-button.active {
+      color: #FFD700;
+      background: #333;
+    }
+
+    .demo-note {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 215, 0, 0.1);
+      color: #FFD700;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 12px;
+      border: 1px solid #FFD700;
+    }
+
+    .card-detail {
+      text-align: center;
+    }
+
+    .card-detail-image {
+      width: 250px;
+      height: 350px;
+      background: linear-gradient(45deg, #333, #555);
+      border-radius: 15px;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+    }
+
+    .card-info {
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 5px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .info-label {
+      color: #aaa;
+    }
+
+    .info-value {
+      color: #FFD700;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="demo-note">
+    📱 DEMO INTERACTIVA - Holocron SWU Card Scanner
+  </div>
+
+  <div class="phone-container">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>📶 🔋</span>
+    </div>
+
+    <!-- Home Screen -->
+    <div class="screen active" id="home">
+      <div class="header">
+        <div class="logo">⚡</div>
+        <h1>Holocron SWU</h1>
+        <p>Star Wars Unlimited Card Scanner</p>
+      </div>
+
+      <button class="button primary" onclick="navigateTo('scan')">
+        📷 Escanear Carta
+      </button>
+
+      <button class="button" onclick="navigateTo('collection')">
+        📚 Ver Colección
+      </button>
+
+      <button class="button" onclick="alert('Configuración no implementada en demo')">
+        ⚙️ Configuración
+      </button>
+
+      <div style="margin-top: 40px; text-align: center; color: #666;">
+        <p>🎯 Funcionalidades principales:</p>
+        <ul style="text-align: left; margin: 10px 0; color: #888;">
+          <li>✅ Navegación entre pantallas</li>
+          <li>✅ Interfaz de escaneo</li>
+          <li>✅ Colección de cartas</li>
+          <li>✅ Detalles de cartas</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Scan Screen -->
+    <div class="screen" id="scan">
+      <button class="back-button" onclick="navigateTo('home')">← Atrás</button>
+
+      <div class="header">
+        <h1>Escanear Carta</h1>
+        <p>Coloca la carta dentro del marco</p>
+      </div>
+
+      <div class="camera-preview">
+        <div class="camera-overlay"></div>
+        <div style="position: absolute; bottom: 20px; color: #666;">
+          📷 Vista previa de cámara
+        </div>
+      </div>
+
+      <div class="scan-instructions">
+        <p>🎯 Mantén la carta centrada y bien iluminada</p>
+      </div>
+
+      <button class="button primary" onclick="simulateScan()">
+        ⚡ Simular Escaneo
+      </button>
+
+      <button class="button" onclick="alert('Galería no implementada en demo')">
+        🖼️ Escanear desde Galería
+      </button>
+    </div>
+
+    <!-- Collection Screen -->
+    <div class="screen" id="collection">
+      <button class="back-button" onclick="navigateTo('home')">← Atrás</button>
+
+      <div class="header">
+        <h1>Mi Colección</h1>
+        <p>12 cartas encontradas</p>
+      </div>
+
+      <div class="card-grid">
+        <div class="card" onclick="navigateTo('detail', 'Luke Skywalker')">
+          <div class="card-image">🌟</div>
+          <div class="card-name">Luke Skywalker</div>
+          <div class="card-stats">Jedi • Héroe</div>
+        </div>
+
+        <div class="card" onclick="navigateTo('detail', 'Darth Vader')">
+          <div class="card-image">⚔️</div>
+          <div class="card-name">Darth Vader</div>
+          <div class="card-stats">Sith • Villano</div>
+        </div>
+
+        <div class="card" onclick="navigateTo('detail', 'Millennium Falcon')">
+          <div class="card-image">🚀</div>
+          <div class="card-name">Millennium Falcon</div>
+          <div class="card-stats">Nave • Rebelde</div>
+        </div>
+
+        <div class="card" onclick="navigateTo('detail', 'Lightsaber')">
+          <div class="card-image">⚡</div>
+          <div class="card-name">Lightsaber</div>
+          <div class="card-stats">Arma • Jedi</div>
+        </div>
+
+        <div class="card" onclick="navigateTo('detail', 'Death Star')">
+          <div class="card-image">💀</div>
+          <div class="card-name">Death Star</div>
+          <div class="card-stats">Base • Imperio</div>
+        </div>
+
+        <div class="card" onclick="navigateTo('detail', 'R2-D2')">
+          <div class="card-image">🤖</div>
+          <div class="card-name">R2-D2</div>
+          <div class="card-stats">Droide • Rebelde</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Detail Screen -->
+    <div class="screen" id="detail">
+      <button class="back-button" onclick="navigateTo('collection')">← Atrás</button>
+
+      <div class="card-detail">
+        <h1 id="detail-name">Luke Skywalker</h1>
+
+        <div class="card-detail-image">
+          <span id="detail-icon">🌟</span>
+        </div>
+
+        <div class="card-info">
+          <div class="info-row">
+            <span class="info-label">Tipo:</span>
+            <span class="info-value" id="detail-type">Jedi Héroe</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Costo:</span>
+            <span class="info-value">7</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Poder:</span>
+            <span class="info-value">8</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Vida:</span>
+            <span class="info-value">12</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Rareza:</span>
+            <span class="info-value">Legendaria</span>
+          </div>
+        </div>
+
+        <button class="button primary" onclick="alert('Funcionalidad de edición no implementada en demo')">
+          ✏️ Editar en Colección
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button class="nav-button active" onclick="navigateTo('home')">🏠</button>
+    <button class="nav-button" onclick="navigateTo('scan')">📷</button>
+    <button class="nav-button" onclick="navigateTo('collection')">📚</button>
+  </div>
+
+  <script>
+    let currentScreen = 'home';
+
+    const cardData = {
+      'Luke Skywalker': { icon: '🌟', type: 'Jedi Héroe' },
+      'Darth Vader': { icon: '⚔️', type: 'Sith Villano' },
+      'Millennium Falcon': { icon: '🚀', type: 'Nave Rebelde' },
+      'Lightsaber': { icon: '⚡', type: 'Arma Jedi' },
+      'Death Star': { icon: '💀', type: 'Base Imperio' },
+      'R2-D2': { icon: '🤖', type: 'Droide Rebelde' }
+    };
+
+    function navigateTo(screen, cardName = null) {
+      // Hide current screen
+      document.getElementById(currentScreen).classList.remove('active');
+
+      // Show new screen
+      document.getElementById(screen).classList.add('active');
+      currentScreen = screen;
+
+      // Update navigation
+      updateNavigation(screen);
+
+      // Handle card detail
+      if (screen === 'detail' && cardName) {
+        const card = cardData[cardName];
+        document.getElementById('detail-name').textContent = cardName;
+        document.getElementById('detail-icon').textContent = card.icon;
+        document.getElementById('detail-type').textContent = card.type;
+      }
+    }
+
+    function updateNavigation(activeScreen) {
+      const navButtons = document.querySelectorAll('.nav-button');
+      navButtons.forEach(btn => btn.classList.remove('active'));
+
+      if (activeScreen === 'home') navButtons[0].classList.add('active');
+      else if (activeScreen === 'scan') navButtons[1].classList.add('active');
+      else if (activeScreen === 'collection' || activeScreen === 'detail') navButtons[2].classList.add('active');
+    }
+
+    function simulateScan() {
+      alert('🎯 Simulación de escaneo:\n\n✅ Carta detectada: "Luke Skywalker"\n✅ Añadida a la colección\n\n(En la app real, esto usaría la cámara y ML)');
+    }
+
+    // Add touch/swipe simulation for better mobile feel
+    let startX = 0;
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    });
+
+    document.addEventListener('touchend', e => {
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && currentScreen === 'home') {
+          navigateTo('scan');
+        } else if (diff < 0 && currentScreen === 'scan') {
+          navigateTo('home');
+        }
+      }
+    });
+
+    console.log('🎯 Demo de Holocron SWU Card Scanner cargada!');
+    console.log('📱 Simula el comportamiento de la app React Native real');
+    console.log('✨ Funcionalidades: Navegación, Escaneo, Colección, Detalles');
+  </script>
+</body>
+
+</html>

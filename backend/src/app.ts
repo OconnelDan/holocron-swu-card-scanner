@@ -8,8 +8,8 @@ import {
   config,
   logger,
   validateConfig,
-  connectToDatabase,
-  setupDatabaseEventListeners
+  // connectToDatabase,
+  // setupDatabaseEventListeners
 } from './utils';
 import { healthRoutes, cardsRoutes, scansRoutes } from './routes';
 import { CardScrapingService } from './services';
@@ -20,7 +20,6 @@ import { CardScrapingService } from './services';
 class App {
   public app: Application;
   private scrapingService: CardScrapingService;
-
   constructor() {
     this.app = express();
     this.scrapingService = new CardScrapingService();
@@ -33,9 +32,8 @@ class App {
 
   /**
    * Configura middlewares de Express
-   */
-  private initializeMiddlewares(): void {
-    // Seguridad
+   */  private initializeMiddlewares(): void {
+    // Helmet para seguridad
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {
@@ -49,7 +47,7 @@ class App {
 
     // CORS
     this.app.use(cors({
-      origin: process.env.CORS_ORIGIN || '*',
+      origin: process.env['CORS_ORIGIN'] || '*',
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
@@ -63,7 +61,7 @@ class App {
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
     // Logging de requests
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
+    this.app.use((req: Request, _res: Response, next: NextFunction) => {
       logger.info('HTTP Request', {
         method: req.method,
         url: req.url,
@@ -72,21 +70,12 @@ class App {
       });
       next();
     });
-  }
-
-  /**
+  }  /**
    * Configura las rutas de la API
    */
   private initializeRoutes(): void {
-    // Health checks (sin /api prefix)
-    this.app.use('/', healthRoutes);
-
-    // API routes
-    this.app.use('/api/cards', cardsRoutes);
-    this.app.use('/api/scans', scansRoutes);
-
-    // Ruta por defecto
-    this.app.get('/', (req: Request, res: Response) => {
+    // Ruta por defecto primero
+    this.app.get('/', (_req: Request, res: Response) => {
       res.status(200).json({
         message: 'Holocron SWU Card Scanner API',
         version: '1.0.0',
@@ -99,6 +88,13 @@ class App {
         },
       });
     });
+
+    // Health checks específicos
+    this.app.use(healthRoutes);
+
+    // API routes
+    this.app.use('/api/cards', cardsRoutes);
+    this.app.use('/api/scans', scansRoutes);
 
     // 404 handler
     this.app.use('*', (req: Request, res: Response) => {
@@ -113,8 +109,7 @@ class App {
   /**
    * Configura manejo de errores
    */
-  private initializeErrorHandling(): void {
-    // Error handler global
+  private initializeErrorHandling(): void {    // Error handler global
     this.app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
       logger.error('Unhandled error:', {
         error: error.message,
@@ -126,7 +121,7 @@ class App {
       res.status(500).json({
         error: 'Error interno del servidor',
         message: 'Ha ocurrido un error inesperado',
-        ...(process.env.NODE_ENV === 'development' && {
+        ...(process.env['NODE_ENV'] === 'development' && {
           details: error.message,
           stack: error.stack,
         }),
@@ -154,14 +149,12 @@ class App {
       logger.error('Uncaught exception:', error);
       process.exit(1);
     });
-  }
-
-  /**
+  }  /**
    * Configura tareas programadas (cron jobs)
    */
   private initializeCronJobs(): void {
     // Scraping diario a las 00:00 UTC+2
-    cron.schedule(config.scraping.schedule, async () => {
+    cron.schedule(config['scraping']['schedule'], async () => {
       try {
         logger.info('Iniciando scraping programado de cartas');
         const results = await this.scrapingService.runFullScrape();
@@ -174,7 +167,7 @@ class App {
     });
 
     logger.info('Cron job de scraping configurado', {
-      schedule: config.scraping.schedule,
+      schedule: config['scraping']['schedule'],
       timezone: 'Europe/Madrid',
     });
   }
@@ -183,20 +176,18 @@ class App {
    * Inicia el servidor
    */
   public async start(): Promise<void> {
-    try {
-      // Validamos configuración
+    try {      // Validamos configuración
       validateConfig();
 
-      // Conectamos a MongoDB
-      await connectToDatabase();
-      setupDatabaseEventListeners();
+      // Conectamos a MongoDB (comentado temporalmente para desarrollo)
+      // await connectToDatabase();
+      // setupDatabaseEventListeners();
 
       // Iniciamos servidor HTTP
-      this.app.listen(config.port, () => {
-        logger.info('Servidor iniciado correctamente', {
-          port: config.port,
-          environment: config.nodeEnv,
-          mongoUri: config.mongodb.uri.replace(/\/\/.*@/, '//***:***@'), // Ocultar credenciales
+      this.app.listen(config['port'], () => {        logger.info('Servidor iniciado correctamente', {
+          port: config['port'],
+          environment: config['nodeEnv'],
+          // mongoUri: config['mongodb']['uri'].replace(/\/\/.*@/, '//***:***@'), // Ocultar credenciales
         });
       });
 

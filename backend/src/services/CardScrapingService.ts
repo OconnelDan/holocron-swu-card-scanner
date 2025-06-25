@@ -51,12 +51,10 @@ export class CardScrapingService {
    */
   async fetchCardsFromSwudb(): Promise<SwudbCardData[]> {
     try {
-      logger.info('Iniciando fetch de cartas desde SWUDB API');
-
-      const response = await axios.get(`${config.swudb.baseUrl}/cards`, {
+      logger.info('Iniciando fetch de cartas desde SWUDB API'); const response = await axios.get(`${config['swudb']['baseUrl']}/cards`, {
         timeout: 30000,
         headers: {
-          'User-Agent': config.scraping.userAgent,
+          'User-Agent': config['scraping']['userAgent'],
           'Accept': 'application/json',
         },
       });
@@ -112,14 +110,12 @@ export class CardScrapingService {
       logger.info('Iniciando scraping de web oficial de SWU');
 
       await this.initBrowser();
-      const page = await this.browser!.newPage();
-
-      // Configuramos user agent y viewport
-      await page.setUserAgent(config.scraping.userAgent);
+      const page = await this.browser!.newPage();      // Configuramos user agent y viewport
+      await page.setUserAgent(config['scraping']['userAgent']);
       await page.setViewport({ width: 1920, height: 1080 });
 
       // Navegamos a la página de cartas
-      await page.goto(config.scraping.officialSiteUrl, {
+      await page.goto(config['scraping']['officialSiteUrl'], {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
@@ -159,18 +155,18 @@ export class CardScrapingService {
       logger.error('Error scraping official website:', error);
       throw new Error(`Error scrapeando web oficial: ${error}`);
     }
-  }
-
-  /**
+  }  /**
    * Auto-scroll para cargar contenido lazy-loaded
    */
   private async autoScroll(page: Page): Promise<void> {
-    await page.evaluate(async () => {
-      await new Promise<void>(resolve => {
+    await page.evaluate(() => {
+      return new Promise<void>(resolve => {
         let totalHeight = 0;
         const distance = 100;
         const timer = setInterval(() => {
-          const { scrollHeight } = document.body;
+          // @ts-ignore - Código ejecutado en el navegador
+          const scrollHeight = document.body.scrollHeight;
+          // @ts-ignore - Código ejecutado en el navegador
           window.scrollBy(0, distance);
           totalHeight += distance;
 
@@ -189,34 +185,53 @@ export class CardScrapingService {
   async updateCardsFromSwudb(): Promise<number> {
     try {
       const swudbCards = await this.fetchCardsFromSwudb();
-      let updatedCount = 0;
-
-      for (const cardData of swudbCards) {
+      let updatedCount = 0; for (const cardData of swudbCards) {
         const cardDoc: Partial<ICard> = {
           swudbId: cardData.id,
           name: cardData.name,
-          subtitle: cardData.subtitle,
           cardNumber: cardData.cardNumber,
           setCode: cardData.set.code,
           setName: cardData.set.name,
           rarity: cardData.rarity as ICard['rarity'],
           type: cardData.type as ICard['type'],
           aspects: cardData.aspects,
-          cost: cardData.cost,
-          power: cardData.power,
-          hp: cardData.hp,
-          arena: cardData.arena as ICard['arena'],
-          text: cardData.text,
-          imageUrl: cardData.imageUrl,
-          imageUrlHd: cardData.imageUrlHd,
-          traits: cardData.traits,
-          keywords: cardData.keywords,
           lastUpdated: new Date(),
           scrapingMetadata: {
             lastScraped: new Date(),
             source: 'swudb',
           },
         };
+
+        // Agregamos campos opcionales solo si están presentes
+        if (cardData.subtitle) {
+          cardDoc.subtitle = cardData.subtitle;
+        }
+        if (cardData.cost !== undefined) {
+          cardDoc.cost = cardData.cost;
+        }
+        if (cardData.power !== undefined) {
+          cardDoc.power = cardData.power;
+        }
+        if (cardData.hp !== undefined) {
+          cardDoc.hp = cardData.hp;
+        } if (cardData.arena && (cardData.arena === 'Ground' || cardData.arena === 'Space')) {
+          cardDoc.arena = cardData.arena;
+        }
+        if (cardData.text) {
+          cardDoc.text = cardData.text;
+        }
+        if (cardData.imageUrl) {
+          cardDoc.imageUrl = cardData.imageUrl;
+        }
+        if (cardData.imageUrlHd) {
+          cardDoc.imageUrlHd = cardData.imageUrlHd;
+        }
+        if (cardData.traits) {
+          cardDoc.traits = cardData.traits;
+        }
+        if (cardData.keywords) {
+          cardDoc.keywords = cardData.keywords;
+        }
 
         await Card.findOneAndUpdate(
           { swudbId: cardData.id },

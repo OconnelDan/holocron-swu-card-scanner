@@ -69,11 +69,9 @@ export class ScansController {
           message: 'La carta especificada no existe en la base de datos',
         });
         return;
-      }
-
-      // Determinamos el estado del escaneo
+      }      // Determinamos el estado del escaneo
       let status: IScan['status'] = 'success';
-      if (scanData.confidence < config.ml.confidenceThreshold) {
+      if (scanData.confidence < config['ml']['confidenceThreshold']) {
         status = 'low_confidence';
       }
 
@@ -81,20 +79,28 @@ export class ScansController {
       const alternativePredictions = scanData.alternativePredictions?.map(pred => ({
         cardId: new mongoose.Types.ObjectId(pred.cardId),
         confidence: pred.confidence,
-      }));
-
-      // Creamos el documento de escaneo
+      }));      // Creamos el documento de escaneo
       const scanDoc: Partial<IScan> = {
         cardId: new mongoose.Types.ObjectId(scanData.cardId),
         confidence: scanData.confidence,
         deviceInfo: scanData.deviceInfo,
         imageMetadata: scanData.imageMetadata,
-        boundingBox: scanData.boundingBox,
-        alternativePredictions,
-        imageHash: scanData.imageHash,
         status,
         scannedAt: new Date(),
       };
+
+      // Agregamos campos opcionales solo si están presentes
+      if (scanData.boundingBox) {
+        scanDoc.boundingBox = scanData.boundingBox;
+      }
+
+      if (alternativePredictions) {
+        scanDoc.alternativePredictions = alternativePredictions;
+      }
+
+      if (scanData.imageHash) {
+        scanDoc.imageHash = scanData.imageHash;
+      }
 
       const scan = new Scan(scanDoc);
       await scan.save();
@@ -129,11 +135,10 @@ export class ScansController {
       });
     }
   }
-
   /**
    * Obtiene estadísticas de escaneos
    */
-  static async getStats(req: Request, res: Response): Promise<void> {
+  static async getStats(_req: Request, res: Response): Promise<void> {
     try {
       const [
         totalScans,
@@ -199,14 +204,13 @@ export class ScansController {
       });
     }
   }
-
   /**
    * Obtiene historial de escaneos con paginación
    */
   static async getScans(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+      const page = parseInt((req.query['page'] as string) ?? '1', 10) || 1;
+      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 100);
       const skip = (page - 1) * limit;
 
       const scans = await Scan.find()
