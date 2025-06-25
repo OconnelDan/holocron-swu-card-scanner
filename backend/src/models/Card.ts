@@ -48,6 +48,26 @@ export interface ICard extends Document {
     source: 'swudb' | 'official' | 'manual';
     officialUrl?: string;
   };
+  /** Información de colección personal */
+  personalCollection?: {
+    owned: boolean;
+    quantity: number;
+    variants: {
+      normal: number;
+      foil: number;
+      hyperspace: number;
+      foil_hyperspace: number;
+      showcase: number;
+      organized_play: number;
+      event_exclusive: number;
+      prerelease_promo: number;
+      organized_play_foil: number;
+      standard_prestige: number;
+      foil_prestige: number;
+      serialized_prestige: number;
+    };
+    lastUpdated: Date;
+  };
 }
 
 const CardSchema: Schema = new Schema({
@@ -150,6 +170,34 @@ const CardSchema: Schema = new Schema({
     officialUrl: {
       type: String,
       default: null,
+    },
+  },
+  personalCollection: {
+    owned: {
+      type: Boolean,
+      default: false,
+    },
+    quantity: {
+      type: Number,
+      default: 0,
+    },
+    variants: {
+      normal: { type: Number, default: 0 },
+      foil: { type: Number, default: 0 },
+      hyperspace: { type: Number, default: 0 },
+      foil_hyperspace: { type: Number, default: 0 },
+      showcase: { type: Number, default: 0 },
+      organized_play: { type: Number, default: 0 },
+      event_exclusive: { type: Number, default: 0 },
+      prerelease_promo: { type: Number, default: 0 },
+      organized_play_foil: { type: Number, default: 0 },
+      standard_prestige: { type: Number, default: 0 },
+      foil_prestige: { type: Number, default: 0 },
+      serialized_prestige: { type: Number, default: 0 },
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now,
     },
   },
 }, {

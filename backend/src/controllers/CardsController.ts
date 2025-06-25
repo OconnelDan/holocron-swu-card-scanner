@@ -49,7 +49,7 @@ export class CardsController {  /**
       const totalPages = Math.ceil(total / limit);
 
       res.status(200).json({
-        cards,
+        data: cards,
         pagination: {
           currentPage: page,
           totalPages,
@@ -86,7 +86,7 @@ export class CardsController {  /**
         return;
       }
 
-      res.status(200).json({ card });
+      res.status(200).json({ data: card });
 
     } catch (error) {
       logger.error('Error obteniendo carta por ID:', error);
@@ -126,8 +126,8 @@ export class CardsController {  /**
 
       res.status(200).json({
         query: q,
-        results: cards.length,
-        cards,
+        total: cards.length,
+        results: cards,
       });
 
     } catch (error) {

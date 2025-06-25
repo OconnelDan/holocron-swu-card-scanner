@@ -14,6 +14,10 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "scrape:cards": "ts-node scripts/scrapeCards.ts",
+    "enrich": "ts-node scripts/enrichCollection.ts",
+    "import:collection": "ts-node scripts/importCollection.ts",
+    "import:enriched": "ts-node scripts/importEnrichedCollection.ts",
+    "import:json": "ts-node scripts/importJsonToMongo.ts",
     "docker:build": "docker build -t holocron-swu-backend .",
     "docker:run": "docker-compose up -d"
   },
@@ -37,7 +41,8 @@
     "mongoose": "^8.1.0",
     "node-cron": "^3.0.3",
     "puppeteer": "^21.11.0",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",

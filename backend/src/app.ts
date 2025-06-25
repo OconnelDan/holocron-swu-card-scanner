@@ -8,8 +8,8 @@ import {
   config,
   logger,
   validateConfig,
-  // connectToDatabase,
-  // setupDatabaseEventListeners
+  connectToDatabase,
+  setupDatabaseEventListeners
 } from './utils';
 import { healthRoutes, cardsRoutes, scansRoutes } from './routes';
 import { CardScrapingService } from './services';
@@ -179,15 +179,16 @@ class App {
     try {      // Validamos configuración
       validateConfig();
 
-      // Conectamos a MongoDB (comentado temporalmente para desarrollo)
-      // await connectToDatabase();
-      // setupDatabaseEventListeners();
+      // Conectamos a MongoDB 
+      await connectToDatabase();
+      setupDatabaseEventListeners();
 
       // Iniciamos servidor HTTP
-      this.app.listen(config['port'], () => {        logger.info('Servidor iniciado correctamente', {
+      this.app.listen(config['port'], () => {
+        logger.info('Servidor iniciado correctamente', {
           port: config['port'],
           environment: config['nodeEnv'],
-          // mongoUri: config['mongodb']['uri'].replace(/\/\/.*@/, '//***:***@'), // Ocultar credenciales
+          mongoUri: config['mongodb']['uri'].replace(/\/\/.*@/, '//***:***@'), // Ocultar credenciales
         });
       });
 

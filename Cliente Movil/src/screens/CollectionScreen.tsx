@@ -12,14 +12,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { CardComponent } from '../components';
 import StorageService from '../services/storage';
+import ApiService from '../services/api';
 import { UserCollection, CollectionStats, Card } from '../types';
 import { formatNumber } from '../utils';
+import { addTestCardsToCollection, isCollectionEmpty } from '../utils/testData';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Collection'>;
 
 interface CollectionItem extends UserCollection {
-  cardName?: string;
-  cardSet?: string;
+  card?: Card; // La información completa de la carta del backend
 }
 
 const CollectionScreen: React.FC<Props> = ({ navigation }) => {
@@ -27,6 +28,7 @@ const CollectionScreen: React.FC<Props> = ({ navigation }) => {
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [backendConnected, setBackendConnected] = useState(false);
 
   useEffect(() => {
     loadCollection();
@@ -35,16 +37,53 @@ const CollectionScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadCollection = async () => {
     try {
+      // Verificar si la colección está vacía y agregar datos de prueba si es necesario
+      if (await isCollectionEmpty()) {
+        console.log('🧪 Colección vacía, agregando datos de prueba...');
+        await addTestCardsToCollection();
+      }
+
+      // Cargar la colección local (IDs y cantidades)
       const userCollection = await StorageService.getCollection();
-      // Por ahora mostraremos solo los IDs, en el futuro cargaremos los detalles completos
-      const collectionWithDetails = userCollection.map(item => ({
-        ...item,
-        cardName: `Carta ${item.cardId}`, // Placeholder
-        cardSet: 'Set Desconocido', // Placeholder
-      }));
-      setCollection(collectionWithDetails);
+
+      if (userCollection.length === 0) {
+        setCollection([]);
+        setBackendConnected(false);
+        return;
+      }
+
+      // Obtener todas las cartas disponibles del backend
+      const cardsResponse = await ApiService.getCards(1, 1000); // Obtener todas las cartas
+
+      if (cardsResponse.success && cardsResponse.data) {
+        const allCards = cardsResponse.data.cards || [];
+        setBackendConnected(true);
+
+        // Combinar los datos: colección local + detalles del backend
+        const collectionWithDetails = userCollection.map(item => {
+          const cardDetails = allCards.find(card => card.id === item.cardId);
+          return {
+            ...item,
+            card: cardDetails, // Información completa de la carta
+          };
+        }).filter(item => item.card); // Solo mostrar cartas que encontramos en el backend
+
+        setCollection(collectionWithDetails);
+      } else {
+        // Si no hay conexión al backend, mostrar solo los IDs
+        console.warn('No se pudieron cargar los detalles de las cartas del backend');
+        setBackendConnected(false);
+        const collectionFallback = userCollection.map(item => ({
+          ...item,
+          card: undefined, // Sin detalles del backend
+        }));
+        setCollection(collectionFallback);
+      }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo cargar la colección');
+      console.error('Error loading collection:', error);
+      setBackendConnected(false);
+      setCollection([]);
+      // No mostrar Alert.alert aquí porque puede causar el crash de Text
     } finally {
       setIsLoading(false);
     }
@@ -113,11 +152,23 @@ const CollectionScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
   const renderCollectionItem = ({ item }: { item: CollectionItem }) => {
-    // Crear una carta mock basada en los datos de colección
-    const mockCard: Card = {
+    // Si tenemos los datos de la carta del backend, usarlos
+    if (item.card) {
+      return (
+        <CardComponent
+          card={item.card}
+          onPress={() => navigation.navigate('CardDetail', { card: item.card! })}
+          showQuantity={true}
+          quantity={item.quantity}
+        />
+      );
+    }
+
+    // Fallback: crear una carta mock si no tenemos datos del backend
+    const fallbackCard: Card = {
       id: item.cardId,
-      name: item.cardName || `Carta ${item.cardId}`,
-      set: item.cardSet || 'Set Desconocido',
+      name: `Carta ${item.cardId}`,
+      set: 'Set Desconocido',
       number: item.cardId.slice(-3) || '001',
       rarity: 'Common',
       type: 'Unit',
@@ -126,10 +177,12 @@ const CollectionScreen: React.FC<Props> = ({ navigation }) => {
       hp: Math.floor(Math.random() * 12) + 1,
       aspects: ['Heroism'],
       traits: ['Rebel'],
-    }; return (
+    };
+
+    return (
       <CardComponent
-        card={mockCard}
-        onPress={() => navigation.navigate('CardDetail', { card: mockCard })}
+        card={fallbackCard}
+        onPress={() => navigation.navigate('CardDetail', { card: fallbackCard })}
         showQuantity={true}
         quantity={item.quantity}
       />
@@ -162,6 +215,13 @@ const CollectionScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Indicador de estado del backend */}
+      <View style={[styles.statusContainer, backendConnected ? styles.statusConnected : styles.statusDisconnected]}>
+        <Text style={styles.statusText}>
+          {backendConnected ? '🟢 Conectado al servidor' : '🔴 Modo offline'}
+        </Text>
+      </View>
+
       {/* Estadísticas */}
       {stats && (
         <View style={styles.statsContainer}>
@@ -339,6 +399,25 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
     paddingBottom: 100,
+  },
+  statusContainer: {
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  statusConnected: {
+    backgroundColor: '#1B5E20',
+  },
+  statusDisconnected: {
+    backgroundColor: '#B71C1C',
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 

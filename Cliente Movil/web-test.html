@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="U        <div>
+            <button onclick="testConnection()">🔗 Probar Conexión</button>
+            <button onclick="loadCards()">📱 Cargar Cartas</button>
+            <button onclick="loadCollection()">🔍 Buscar Cartas (SOR)</button>
+            <button onclick="searchLuke()">⭐ Buscar "Luke"</button>
+        </div>>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holocron SWU - Test de Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .card {
+            background-color: #3a3a3a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .online { background-color: #2e7d32; }
+        .offline { background-color: #d32f2f; }
+        .error { background-color: #f57c00; }
+        #loading {
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Holocron SWU Card Scanner</h1>
+        <h2>Test de Integración con Backend</h2>
+        
+        <div id="status" class="status offline">
+            🔴 Desconectado del backend
+        </div>
+        
+        <div>
+            <button onclick="testConnection()">🔗 Probar Conexión</button>
+            <button onclick="loadCards()">📱 Cargar Cartas</button>
+            <button onclick="loadCollection()">🗂️ Cargar tu Colección</button>
+        </div>
+        
+        <div id="loading">
+            <p>⏳ Cargando...</p>
+        </div>
+        
+        <div id="results" class="container">
+            <h3>Resultados:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+        
+        function displayResult(title, data) {
+            const output = document.getElementById('output');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'card';
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            output.appendChild(resultDiv);
+        }
+        
+        async function testConnection() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('🟢 Conectado al backend', 'online');
+                    displayResult('Estado del Backend', data);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('🔴 Error de conexión: ' + error.message, 'error');
+                displayResult('Error de Conexión', { error: error.message });
+            }
+            showLoading(false);
+        }
+        
+        async function loadCards() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE}/cards`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('🟢 Cartas cargadas exitosamente', 'online');
+                    displayResult('Cartas del Backend', {
+                        total: data.data ? data.data.length : 0,
+                        sample: data.data ? data.data.slice(0, 3) : data
+                    });
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('🔴 Error cargando cartas: ' + error.message, 'error');
+                displayResult('Error Cargando Cartas', { error: error.message });
+            }
+            showLoading(false);
+        }
+        
+        async function loadCollection() {
+            showLoading(true);
+            try {
+                // Usar el endpoint de búsqueda para mostrar cartas de un set específico
+                const response = await fetch(`${API_BASE}/cards/search?q=sor`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('🟢 Búsqueda de cartas exitosa', 'online');
+                    displayResult('Cartas encontradas (Set SOR)', {
+                        total: data.results ? data.results.length : 0,
+                        sample: data.results ? data.results.slice(0, 5) : data
+                    });
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('🔴 Error en búsqueda: ' + error.message, 'error');
+                displayResult('Error en Búsqueda', { error: error.message });
+            }
+            showLoading(false);
+        }
+        
+        async function searchLuke() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE}/cards/search?q=Luke`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('🟢 Búsqueda "Luke" exitosa', 'online');
+                    displayResult('Cartas con "Luke"', {
+                        total: data.results ? data.results.length : 0,
+                        cards: data.results || data
+                    });
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('🔴 Error buscando Luke: ' + error.message, 'error');
+                displayResult('Error Búsqueda Luke', { error: error.message });
+            }
+            showLoading(false);
+        }
+        
+        // Test inicial de conexión
+        document.addEventListener('DOMContentLoaded', () => {
+            testConnection();
+        });
+    </script>
+</body>
+</html>

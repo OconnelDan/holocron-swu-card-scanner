@@ -1,0 +1,122 @@
+[
+  {
+    "id": "SOR-001",
+    "name": "Director Krennic, Aspiring to Authority",
+    "set": "SOR",
+    "number": "001",
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Cunning", "Villainy"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-002", 
+    "name": "Iden Versio, Inferno Squad Commander",
+    "set": "SOR",
+    "number": "002", 
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Cunning", "Villainy"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-003",
+    "name": "Chewbacca, Walking Carpet", 
+    "set": "SOR",
+    "number": "003",
+    "rarity": "Legendary",
+    "type": "Unit",
+    "aspects": ["Heroism"],
+    "cost": 8,
+    "power": 6,
+    "hp": 8
+  },
+  {
+    "id": "SOR-004",
+    "name": "Chirrut Îmwe, One with the Force",
+    "set": "SOR", 
+    "number": "004",
+    "rarity": "Legendary",
+    "type": "Unit",
+    "aspects": ["Heroism", "Vigilance"],
+    "cost": 4,
+    "power": 3,
+    "hp": 4
+  },
+  {
+    "id": "SOR-005",
+    "name": "Luke Skywalker, Faithful Friend",
+    "set": "SOR",
+    "number": "005",
+    "rarity": "Legendary", 
+    "type": "Unit",
+    "aspects": ["Heroism", "Vigilance"],
+    "cost": 6,
+    "power": 4,
+    "hp": 6
+  },
+  {
+    "id": "SOR-006",
+    "name": "Emperor Palpatine, Galactic Ruler",
+    "set": "SOR",
+    "number": "006",
+    "rarity": "Legendary",
+    "type": "Leader", 
+    "aspects": ["Cunning", "Villainy"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-007", 
+    "name": "Grand Moff Tarkin, Oversector Governor",
+    "set": "SOR",
+    "number": "007",
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Command", "Villainy"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-008",
+    "name": "Hera Syndulla, Spectre Two", 
+    "set": "SOR",
+    "number": "008",
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Command", "Heroism"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-009",
+    "name": "Leia Organa, Alliance General",
+    "set": "SOR",
+    "number": "009", 
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Command", "Heroism"],
+    "cost": null,
+    "power": null,
+    "hp": 20
+  },
+  {
+    "id": "SOR-010",
+    "name": "Darth Vader, Dark Lord of the Sith",
+    "set": "SOR",
+    "number": "010",
+    "rarity": "Legendary",
+    "type": "Leader",
+    "aspects": ["Aggression", "Villainy"], 
+    "cost": null,
+    "power": null,
+    "hp": 25
+  }
+]

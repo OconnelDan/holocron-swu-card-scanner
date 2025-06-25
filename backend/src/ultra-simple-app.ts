@@ -10,7 +10,7 @@ class UltraSimpleApp {
   public app: Application;
   constructor() {
     this.app = express();
-    
+
     // TEST 1: Agregando helmet
     logger.info('🔬 TEST 1: Agregando helmet...');
     this.app.use(helmet({
@@ -23,7 +23,7 @@ class UltraSimpleApp {
         },
       },
     }));
-    
+
     // Solo middlewares básicos
     this.app.use(express.json());
 

@@ -1,8 +1,19 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { Platform } from 'react-native';
 import { ApiResponse, Card, ScanResult, UserCollection } from '../types';
 
 // Configuración base para el cliente HTTP
-const BASE_URL = 'http://localhost:3000/api'; // URL del backend
+// Detectar automáticamente si es emulador o dispositivo físico
+const getBaseUrl = () => {
+  if (Platform.OS === 'android') {
+    // Para emulador Android usar 10.0.2.2
+    // Para dispositivo físico usar la IP de tu PC
+    return __DEV__ ? 'http://192.168.1.135:3000/api' : 'http://10.0.2.2:3000/api';
+  }
+  return 'http://localhost:3000/api'; // Para iOS o web
+};
+
+const BASE_URL = getBaseUrl();
 
 class ApiService {
   private client: AxiosInstance;
@@ -37,6 +48,22 @@ class ApiService {
       return {
         success: false,
         error: 'Error al escanear la carta',
+      };
+    }
+  }
+
+  // Método para obtener todas las cartas con paginación
+  async getCards(page: number = 1, limit: number = 20): Promise<ApiResponse<{ cards: Card[], pagination: any }>> {
+    try {
+      const response = await this.client.get(`/cards?page=${page}&limit=${limit}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Error al obtener cartas',
       };
     }
   }
