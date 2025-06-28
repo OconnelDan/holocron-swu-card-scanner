@@ -8,9 +8,9 @@ const getBaseUrl = () => {
   if (Platform.OS === 'android') {
     // Para emulador Android usar 10.0.2.2
     // Para dispositivo físico usar la IP de tu PC
-    return __DEV__ ? 'http://192.168.1.135:3000/api' : 'http://10.0.2.2:3000/api';
+    return __DEV__ ? 'http://192.168.1.135:3001/api' : 'http://10.0.2.2:3001/api';
   }
-  return 'http://localhost:3000/api'; // Para iOS o web
+  return 'http://localhost:3001/api'; // Para iOS o web
 };
 
 const BASE_URL = getBaseUrl();
@@ -116,6 +116,32 @@ class ApiService {
       return response.status === 200;
     } catch (error) {
       return false;
+    }
+  }
+
+  // Método para actualizar las cantidades de una carta existente
+  async updateCardQuantities(setCode: string, cardNumber: string, quantities: any): Promise<ApiResponse<Card>> {
+    try {
+      const response = await this.client.put(`/cards/${setCode}/${cardNumber}`, quantities);
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Error al actualizar la carta',
+      };
+    }
+  }
+
+  // Método para obtener estadísticas de la colección
+  async getCollectionStats(): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.client.get('/cards/collection/stats');
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Error al obtener estadísticas',
+      };
     }
   }
 }

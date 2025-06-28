@@ -1,0 +1,14 @@
+{
+  "name": "New Test Card 5LOF",
+  "setCode": "5LOF", 
+  "cardNumber": "999",
+  "type": "Unit",
+  "rarity": "Legendary",
+  "cost": 5,
+  "power": 4,
+  "hp": 6,
+  "traits": "Jedi, Force",
+  "description": "Test card for 5LOF set integration - New card",
+  "owned": false,
+  "ownedQuantity": 0
+}

@@ -31,7 +31,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('Scan')}
           >
             <Text style={styles.actionButtonText}>📷</Text>
-            <Text style={styles.actionButtonLabel}>Escanear Carta</Text>
+            <View style={styles.actionButtonContent}>
+              <Text style={styles.actionButtonLabel}>Escanear Carta</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -39,7 +41,20 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('Collection')}
           >
             <Text style={styles.actionButtonText}>📚</Text>
-            <Text style={styles.actionButtonLabel}>Mi Colección</Text>
+            <View style={styles.actionButtonContent}>
+              <Text style={styles.actionButtonLabel}>Mi Colección</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.addButton]}
+            onPress={() => navigation.navigate('UpdateCard')}
+          >
+            <Text style={styles.actionButtonText}>➕</Text>
+            <View style={styles.actionButtonContent}>
+              <Text style={styles.actionButtonLabel}>Actualizar Carta</Text>
+              <Text style={styles.actionButtonSubLabel}>5LOF Ready!</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -102,16 +117,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     marginBottom: 40,
   },
   actionButton: {
-    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     padding: 20,
     borderRadius: 15,
-    marginHorizontal: 5,
+    marginBottom: 15,
   },
   scanButton: {
     backgroundColor: '#1E88E5',
@@ -119,15 +134,26 @@ const styles = StyleSheet.create({
   collectionButton: {
     backgroundColor: '#43A047',
   },
+  addButton: {
+    backgroundColor: '#27ae60',
+  },
   actionButtonText: {
     fontSize: 40,
-    marginBottom: 10,
+    marginRight: 15,
+  },
+  actionButtonContent: {
+    flex: 1,
   },
   actionButtonLabel: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
+  },
+  actionButtonSubLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 2,
   },
   statsContainer: {
     backgroundColor: '#1A1A1A',

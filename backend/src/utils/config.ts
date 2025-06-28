@@ -1,7 +1,10 @@
-import dotenv from 'dotenv';
-
-// Cargamos variables de entorno
-dotenv.config();
+// Configuramos directamente las variables de entorno para evitar problemas con dotenv
+try {
+  require('dotenv').config();
+} catch (error) {
+  // Si dotenv no está disponible, continúa sin él
+  console.warn('dotenv no disponible, usando variables de entorno del sistema');
+}
 
 /**
  * Configuración centralizada de la aplicación

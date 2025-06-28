@@ -8,6 +8,7 @@ import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
 import CollectionScreen from '../screens/CollectionScreen';
 import CardDetailScreen from '../screens/CardDetailScreen';
+import UpdateCardScreen from '../screens/UpdateCardScreen';
 
 // Definir tipos para la navegación
 export type RootStackParamList = {
@@ -15,6 +16,7 @@ export type RootStackParamList = {
   Scan: undefined;
   Collection: undefined;
   CardDetail: { card: Card };
+  UpdateCard: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -63,6 +65,16 @@ const AppNavigator: React.FC = () => {
           component={CardDetailScreen}
           options={{
             title: 'Detalle de Carta',
+          }}
+        />
+        <Stack.Screen
+          name="UpdateCard"
+          component={UpdateCardScreen}
+          options={{
+            title: 'Actualizar Carta',
+            headerStyle: {
+              backgroundColor: '#27ae60',
+            },
           }}
         />
       </Stack.Navigator>

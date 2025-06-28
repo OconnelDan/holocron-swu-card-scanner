@@ -315,4 +315,105 @@ export class CardsController {  /**
       });
     }
   }
+
+  /**
+   * Actualiza las cantidades de una carta existente
+   */
+  static async updateCardQuantities(req: Request, res: Response): Promise<void> {
+    try {
+      const { setCode, cardNumber } = req.params;
+      const updateData = req.body;
+
+      // Validar que setCode y cardNumber estén presentes
+      if (!setCode || !cardNumber) {
+        res.status(400).json({
+          error: 'Parámetros requeridos faltantes',
+          message: 'setCode y cardNumber son requeridos',
+        });
+        return;
+      }
+
+      // Buscar la carta existente
+      const existingCard = await Card.findOne({
+        setCode: setCode.toUpperCase(),
+        cardNumber: cardNumber.padStart(3, '0'),
+      });
+
+      if (!existingCard) {
+        res.status(404).json({
+          error: 'Carta no encontrada',
+          message: `No se encontró la carta ${setCode.toUpperCase()}-${cardNumber.padStart(3, '0')}`,
+        });
+        return;
+      }
+
+      // Validar que solo se envíen campos de variantes válidos
+      const validVariants = [
+        'normal', 'foil', 'hyperspace', 'foil_hyperspace', 'showcase',
+        'organized_play', 'event_exclusive', 'prerelease_promo',
+        'organized_play_foil', 'standard_prestige', 'foil_prestige', 'serialized_prestige'
+      ];
+
+      const updateFields: any = {
+        lastUpdated: new Date(),
+      };
+
+      // Actualizar solo las variantes que se enviaron
+      let totalCopies = 0;
+      for (const [key, value] of Object.entries(updateData)) {
+        if (validVariants.includes(key)) {
+          const quantity = parseInt(value as string, 10);
+          if (isNaN(quantity) || quantity < 0) {
+            res.status(400).json({
+              error: 'Cantidad inválida',
+              message: `La cantidad para ${key} debe ser un número entero positivo`,
+            });
+            return;
+          }
+          updateFields[`variants.${key}`] = quantity;
+        }
+      }
+
+      // Recalcular el total de copias basado en todas las variantes
+      const updatedCard = await Card.findOneAndUpdate(
+        { setCode: setCode.toUpperCase(), cardNumber: cardNumber.padStart(3, '0') },
+        { $set: updateFields },
+        { new: true }
+      );
+
+      if (!updatedCard) {
+        res.status(500).json({
+          error: 'Error actualizando carta',
+          message: 'No se pudo actualizar la carta',
+        });
+        return;
+      }
+
+      // Calcular el total de copias sumando todas las variantes
+      totalCopies = Object.values(updatedCard.variants).reduce((sum: number, qty: any) => sum + (qty || 0), 0);
+      
+      // Actualizar el campo copies con el total
+      await Card.findOneAndUpdate(
+        { _id: updatedCard._id },
+        { $set: { copies: totalCopies } }
+      );
+
+      // Obtener la carta actualizada con el nuevo total
+      const finalCard = await Card.findById(updatedCard._id);
+
+      logger.info(`Carta actualizada: ${finalCard?.setCode}-${finalCard?.cardNumber} - Total: ${totalCopies} copias`);
+
+      res.status(200).json({
+        message: 'Carta actualizada exitosamente',
+        data: finalCard,
+      });
+
+    } catch (error) {
+      logger.error('Error actualizando cantidades de carta:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        message: 'No se pudo actualizar la carta',
+      });
+    }
+  }
 }

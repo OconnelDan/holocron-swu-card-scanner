@@ -45,6 +45,16 @@ router.get('/collection/owned', CardsController.getOwnedCards);
 router.get('/search', CardsController.searchCards);
 
 /**
+ * @route PUT /api/cards/:setCode/:cardNumber
+ * @desc Actualiza las cantidades de una carta existente
+ * @access Public
+ * @param setCode - Código del set (5LOF, 1SOR, etc.)
+ * @param cardNumber - Número de la carta (001, 002, etc.)
+ * @body {object} - Cantidades de variantes a actualizar
+ */
+router.put('/:setCode/:cardNumber', CardsController.updateCardQuantities);
+
+/**
  * @route GET /api/cards/:setCode/:cardNumber
  * @desc Obtiene una carta específica por set y número
  * @access Public
