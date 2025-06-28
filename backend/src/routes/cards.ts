@@ -17,8 +17,15 @@ const router = Router();
 router.get('/', CardsController.getCards);
 
 /**
- * @route GET /api/cards/collection/stats
+ * @route GET /api/cards/stats
  * @desc Obtiene estadísticas de la colección
+ * @access Public
+ */
+router.get('/stats', CardsController.getCollectionStats);
+
+/**
+ * @route GET /api/cards/collection/stats
+ * @desc Obtiene estadísticas de la colección (ruta alternativa)
  * @access Public
  */
 router.get('/collection/stats', CardsController.getCollectionStats);

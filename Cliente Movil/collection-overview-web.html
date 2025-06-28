@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holocron SWU - Collection Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #F5F5F5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .progress-container {
+            margin-top: 12px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #E0E0E0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card.blue { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); color: #1976D2; }
+        .stat-card.purple { background: linear-gradient(135deg, #F3E5F5, #E1BEE7); color: #7B1FA2; }
+        .stat-card.green { background: linear-gradient(135deg, #E8F5E8, #C8E6C9); color: #388E3C; }
+        .stat-card.orange { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); color: #F57C00; }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .stat-subtitle {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .controls {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .controls-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-view {
+            background: #F5F5F5;
+            color: #666;
+        }
+
+        .btn-view.active {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #F5F5F5;
+            font-size: 12px;
+        }
+
+        .sets-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .set-card {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .set-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .set-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .set-info {
+            flex: 1;
+        }
+
+        .set-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .set-code {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .set-stats {
+            text-align: right;
+        }
+
+        .completion-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-count {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .set-progress {
+            margin-bottom: 8px;
+        }
+
+        .set-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-label-small {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Main Progress -->
+        <div class="header">
+            <h1 class="title">Mi Colección</h1>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Progreso General</span>
+                    <span id="main-progress-text">0.0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="main-progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="messages"></div>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card blue">
+                <div class="stat-value" id="total-cards">-</div>
+                <div class="stat-label">Cartas Totales</div>
+                <div class="stat-subtitle" id="total-subtitle">-</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-value" id="unique-cards">-</div>
+                <div class="stat-label">Únicas</div>
+                <div class="stat-subtitle">diferentes</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-value" id="estimated-value">-</div>
+                <div class="stat-label">Valor Estimado</div>
+                <div class="stat-subtitle">USD</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-value" id="duplicates">-</div>
+                <div class="stat-label">Duplicados</div>
+                <div class="stat-subtitle">extras</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="controls-left">
+                <label for="sort-select" style="font-size: 12px; color: #666;">Ordenar por:</label>
+                <select id="sort-select" class="select" onchange="changeSorting()">
+                    <option value="release">Fecha de lanzamiento</option>
+                    <option value="name">Nombre</option>
+                    <option value="completion">Completitud</option>
+                </select>
+            </div>
+            <div class="controls-right">
+                <button class="btn btn-view active" onclick="changeView('list')">Lista</button>
+                <button class="btn btn-view" onclick="changeView('grid')">Grid</button>
+                <button class="btn btn-primary" onclick="showAddPackModal()">+ Pack</button>
+                <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- Sets List -->
+        <div class="sets-container">
+            <h2 class="section-title">Sets de Cartas</h2>
+            <div id="sets-loading" class="loading">Cargando datos de MongoDB...</div>
+            <div id="sets-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let currentData = {
+            cards: [],
+            sets: {},
+            stats: {}
+        };
+        let currentSort = 'release';
+        let currentView = 'list';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCollectionData();
+        });
+
+        // Show messages
+        function showMessage(text, type = 'error') {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="${type}">${text}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load all collection data
+        async function loadCollectionData() {
+            try {
+                document.getElementById('sets-loading').style.display = 'block';
+                document.getElementById('sets-list').innerHTML = '';
+
+                // Load stats data from the corrected endpoint
+                const statsResponse = await fetch(`${API_BASE}/cards/stats`);
+                if (!statsResponse.ok) throw new Error('Error al cargar estadísticas');
+                
+                const statsData = await statsResponse.json();
+                currentData.stats = statsData.data;
+
+                // Process and render data
+                renderStats();
+                renderSets();
+
+                document.getElementById('sets-loading').style.display = 'none';
+                showMessage('Datos cargados exitosamente desde MongoDB', 'success');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showMessage(`Error al cargar datos: ${error.message}`);
+                document.getElementById('sets-loading').style.display = 'none';
+            }
+        }
+
+        // Refresh data function
+        function refreshData() {
+            showMessage('Refrescando datos...', 'success');
+            loadCollectionData();
+        }
+
+        // Render functions
+        function renderStats() {
+            const overview = currentData.stats.overview;
+            
+            document.getElementById('total-cards').textContent = overview.totalPhysicalCards.toLocaleString();
+            document.getElementById('total-subtitle').textContent = `de ${overview.totalCards.toLocaleString()} únicas`;
+            document.getElementById('unique-cards').textContent = overview.ownedCards.toLocaleString();
+            document.getElementById('estimated-value').textContent = `$0`; // TODO: Implementar valor estimado
+            document.getElementById('duplicates').textContent = (overview.totalPhysicalCards - overview.ownedCards).toLocaleString();
+
+            // Main progress
+            document.getElementById('main-progress-text').textContent = `${overview.completionPercentage}%`;
+            document.getElementById('main-progress-fill').style.width = `${overview.completionPercentage}%`;
+        }
+
+        function renderSets() {
+            const setsList = document.getElementById('sets-list');
+            const setsArray = currentData.stats.bySet;
+
+            // Sort sets
+            setsArray.sort((a, b) => {
+                switch (currentSort) {
+                    case 'name':
+                        return a.setCode.localeCompare(b.setCode);
+                    case 'completion':
+                        return parseFloat(b.completionPercentage) - parseFloat(a.completionPercentage);
+                    case 'release':
+                    default:
+                        return a.setCode.localeCompare(b.setCode); // Default to set code order
+                }
+            });
+
+            setsList.innerHTML = setsArray.map(set => `
+                <div class="set-card" onclick="showSetDetails('${set.setCode}')">
+                    <div class="set-header">
+                        <div class="set-info">
+                            <div class="set-name">${getSetName(set.setCode)}</div>
+                            <div class="set-code">${set.setCode}</div>
+                        </div>
+                        <div class="set-stats">
+                            <div class="completion-text">${set.completionPercentage}%</div>
+                            <div class="card-count">${set.ownedCards}/${set.totalCards}</div>
+                        </div>
+                    </div>
+                    <div class="set-progress">
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" style="width: ${set.completionPercentage}%; background-color: ${getCompletionColor(parseFloat(set.completionPercentage))};"></div>
+                        </div>
+                    </div>
+                    <div class="set-footer">
+                        <span class="progress-label-small">Progreso de la colección</span>
+                        <span class="progress-label-small">${set.totalCards - set.ownedCards} cartas restantes</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getSetName(setCode) {
+            const setNames = {
+                '1SOR': 'Spark of Rebellion',
+                '2SHD': 'Shadows of the Galaxy',
+                '3TWI': 'Twilight of the Republic',
+                '4JTL': 'Juega tu Legado', // TODO: Replace with actual name
+                '5LOF': 'Legacy of the Force' // TODO: Replace with actual name
+            };
+            return setNames[setCode] || setCode;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // Event handlers
+        function changeSorting() {
+            currentSort = document.getElementById('sort-select').value;
+            renderSets();
+        }
+
+        function getCompletionColor(percentage) {
+            if (percentage >= 100) return '#4CAF50'; // Green
+            if (percentage >= 75) return '#8BC34A';  // Light green
+            if (percentage >= 50) return '#FF9800';  // Orange
+            if (percentage >= 25) return '#FF5722';  // Red-orange
+            return '#F44336'; // Red
+        }
+
+        function changeView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.btn-view').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            showMessage(`Vista cambiada a: ${view}`, 'success');
+        }
+
+        function showSetDetails(setCode) {
+            const setData = currentData.stats.bySet.find(s => s.setCode === setCode);
+            if (setData) {
+                showMessage(`Mostrando detalles de ${getSetName(setCode)} (${setData.ownedCards}/${setData.totalCards} cartas)`, 'success');
+                // Here you could implement navigation to set details
+            }
+        }
+
+        function showAddPackModal() {
+            showMessage('Modal "Add Pack" - Funcionalidad pendiente de implementar', 'success');
+        }
+
+        function refreshData() {
+            loadCollectionData();
+        }
+    </script>
+</body>
+</html>

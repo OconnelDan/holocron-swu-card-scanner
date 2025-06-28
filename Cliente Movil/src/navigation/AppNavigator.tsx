@@ -9,6 +9,8 @@ import ScanScreen from '../screens/ScanScreen';
 import CollectionScreen from '../screens/CollectionScreen';
 import CardDetailScreen from '../screens/CardDetailScreen';
 import UpdateCardScreen from '../screens/UpdateCardScreen';
+import { CollectionOverviewScreen } from '../screens/CollectionOverviewScreen';
+import { SetDetailsScreen } from '../screens/SetDetailsScreen';
 
 // Definir tipos para la navegación
 export type RootStackParamList = {
@@ -17,6 +19,8 @@ export type RootStackParamList = {
   Collection: undefined;
   CardDetail: { card: Card };
   UpdateCard: undefined;
+  CollectionOverview: undefined;
+  SetDetails: { setCode: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -75,6 +79,23 @@ const AppNavigator: React.FC = () => {
             headerStyle: {
               backgroundColor: '#27ae60',
             },
+          }}
+        />
+        <Stack.Screen
+          name="CollectionOverview"
+          component={CollectionOverviewScreen}
+          options={{
+            title: 'Resumen de Colección',
+            headerStyle: {
+              backgroundColor: '#2196F3',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="SetDetails"
+          component={SetDetailsScreen}
+          options={{
+            title: 'Detalles del Set',
           }}
         />
       </Stack.Navigator>

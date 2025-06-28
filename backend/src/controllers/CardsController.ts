@@ -11,7 +11,7 @@ export class CardsController {  /**
   static async getCards(req: Request, res: Response): Promise<void> {
     try {
       const page = parseInt((req.query['page'] as string) ?? '1', 10) || 1;
-      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 100);
+      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 2000);
       const skip = (page - 1) * limit;
 
       // Filtros opcionales
@@ -147,18 +147,35 @@ export class CardsController {  /**
         { $group: { _id: null, total: { $sum: '$copies' } } }
       ]);
 
-      // Estadísticas por set
-      const statsBySet = await Card.aggregate([
-        {
-          $group: {
-            _id: '$setCode',
-            totalCards: { $sum: 1 },
-            ownedCards: { $sum: { $cond: [{ $gt: ['$copies', 0] }, 1, 0] } },
-            totalPhysicalCards: { $sum: '$copies' }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]);
+      // Obtener todos los sets existentes para incluir TODOS los sets, incluso aquellos con 0 cartas coleccionadas
+      const allSets = await Card.distinct('setCode');
+      
+      // Estadísticas por set (incluyendo sets con 0 cartas coleccionadas)
+      const statsBySet = await Promise.all(
+        allSets.map(async (setCode) => {
+          const totalCards = await Card.countDocuments({ setCode });
+          const ownedCards = await Card.countDocuments({ setCode, copies: { $gt: 0 } });
+          const totalPhysicalCards = await Card.aggregate([
+            { $match: { setCode } },
+            { $group: { _id: null, total: { $sum: '$copies' } } }
+          ]);
+
+          // Calcular porcentaje de completitud correctamente:
+          // 100% si se posee al menos una copia de cada carta del set
+          const completionPercentage = totalCards > 0 ? ((ownedCards / totalCards) * 100).toFixed(1) : '0.0';
+
+          return {
+            setCode,
+            totalCards,
+            ownedCards,
+            totalPhysicalCards: totalPhysicalCards[0]?.total || 0,
+            completionPercentage
+          };
+        })
+      );
+
+      // Ordenar por setCode para mantener consistencia
+      statsBySet.sort((a, b) => a.setCode.localeCompare(b.setCode));
 
       // Estadísticas por rareza
       const statsByRarity = await Card.aggregate([
@@ -179,21 +196,15 @@ export class CardsController {  /**
             totalCards,
             ownedCards,
             totalPhysicalCards: totalPhysicalCards[0]?.total || 0,
-            completionPercentage: ((ownedCards / totalCards) * 100).toFixed(1)
+            completionPercentage: totalCards > 0 ? ((ownedCards / totalCards) * 100).toFixed(1) : '0.0'
           },
-          bySet: statsBySet.map(stat => ({
-            setCode: stat._id,
-            totalCards: stat.totalCards,
-            ownedCards: stat.ownedCards,
-            totalPhysicalCards: stat.totalPhysicalCards,
-            completionPercentage: ((stat.ownedCards / stat.totalCards) * 100).toFixed(1)
-          })),
+          bySet: statsBySet,
           byRarity: statsByRarity.map(stat => ({
             rarity: stat._id,
             totalCards: stat.totalCards,
             ownedCards: stat.ownedCards,
             totalPhysicalCards: stat.totalPhysicalCards,
-            completionPercentage: ((stat.ownedCards / stat.totalCards) * 100).toFixed(1)
+            completionPercentage: stat.totalCards > 0 ? ((stat.ownedCards / stat.totalCards) * 100).toFixed(1) : '0.0'
           }))
         }
       });
@@ -213,7 +224,7 @@ export class CardsController {  /**
   static async getOwnedCards(req: Request, res: Response): Promise<void> {
     try {
       const page = parseInt((req.query['page'] as string) ?? '1', 10) || 1;
-      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 100);
+      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 2000);
       const skip = (page - 1) * limit;
 
       // Filtros opcionales
@@ -391,7 +402,7 @@ export class CardsController {  /**
 
       // Calcular el total de copias sumando todas las variantes
       totalCopies = Object.values(updatedCard.variants).reduce((sum: number, qty: any) => sum + (qty || 0), 0);
-      
+
       // Actualizar el campo copies con el total
       await Card.findOneAndUpdate(
         { _id: updatedCard._id },

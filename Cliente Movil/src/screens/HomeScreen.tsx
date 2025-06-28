@@ -56,6 +56,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.actionButtonSubLabel}>5LOF Ready!</Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.overviewButton]}
+            onPress={() => navigation.navigate('CollectionOverview')}
+          >
+            <Text style={styles.actionButtonText}>📊</Text>
+            <View style={styles.actionButtonContent}>
+              <Text style={styles.actionButtonLabel}>Resumen Colección</Text>
+              <Text style={styles.actionButtonSubLabel}>Stats & Progress</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Statistics Preview */}
@@ -136,6 +147,9 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: '#27ae60',
+  },
+  overviewButton: {
+    backgroundColor: '#9C27B0',
   },
   actionButtonText: {
     fontSize: 40,
