@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="U        <div>
-            <button onclick="testConnection()">🔗 Probar Conexión</button>
-            <button onclick="loadCards()">📱 Cargar Cartas</button>
-            <button onclick="loadCollection()">🔍 Buscar Cartas (SOR)</button>
-            <button onclick="searchLuke()">⭐ Buscar "Luke"</button>
-        </div>>
+            <button onclick=" testConnection()">🔗 Probar Conexión</button>
+    <button onclick="loadCards()">📱 Cargar Cartas</button>
+    <button onclick="loadCollection()">🔍 Buscar Cartas (SOR)</button>
+    <button onclick="searchLuke()">⭐ Buscar "Luke"</button>
+    </div>>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holocron SWU - Test de Backend</title>
     <style>
@@ -18,12 +19,14 @@
             background-color: #1a1a1a;
             color: #ffffff;
         }
+
         .container {
             background-color: #2a2a2a;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
         }
+
         button {
             background-color: #4CAF50;
             color: white;
@@ -33,9 +36,11 @@
             cursor: pointer;
             margin: 5px;
         }
+
         button:hover {
             background-color: #45a049;
         }
+
         .card {
             background-color: #3a3a3a;
             padding: 10px;
@@ -43,39 +48,52 @@
             border-radius: 5px;
             border-left: 4px solid #4CAF50;
         }
+
         .status {
             padding: 10px;
             margin: 10px 0;
             border-radius: 5px;
         }
-        .online { background-color: #2e7d32; }
-        .offline { background-color: #d32f2f; }
-        .error { background-color: #f57c00; }
+
+        .online {
+            background-color: #2e7d32;
+        }
+
+        .offline {
+            background-color: #d32f2f;
+        }
+
+        .error {
+            background-color: #f57c00;
+        }
+
         #loading {
             display: none;
             text-align: center;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🃏 Holocron SWU Card Scanner</h1>
         <h2>Test de Integración con Backend</h2>
-        
+
         <div id="status" class="status offline">
             🔴 Desconectado del backend
         </div>
-        
+
         <div>
             <button onclick="testConnection()">🔗 Probar Conexión</button>
             <button onclick="loadCards()">📱 Cargar Cartas</button>
             <button onclick="loadCollection()">🗂️ Cargar tu Colección</button>
+            <button onclick="testUpdateCard()">✏️ Probar Actualización</button>
         </div>
-        
+
         <div id="loading">
             <p>⏳ Cargando...</p>
         </div>
-        
+
         <div id="results" class="container">
             <h3>Resultados:</h3>
             <div id="output"></div>
@@ -83,18 +101,18 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3000/api';
-        
+        const API_BASE = 'http://localhost:3001/api';
+
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
-        
+
         function updateStatus(message, type) {
             const statusEl = document.getElementById('status');
             statusEl.textContent = message;
             statusEl.className = `status ${type}`;
         }
-        
+
         function displayResult(title, data) {
             const output = document.getElementById('output');
             const resultDiv = document.createElement('div');
@@ -105,7 +123,7 @@
             `;
             output.appendChild(resultDiv);
         }
-        
+
         async function testConnection() {
             showLoading(true);
             try {
@@ -123,7 +141,7 @@
             }
             showLoading(false);
         }
-        
+
         async function loadCards() {
             showLoading(true);
             try {
@@ -144,7 +162,7 @@
             }
             showLoading(false);
         }
-        
+
         async function loadCollection() {
             showLoading(true);
             try {
@@ -166,7 +184,7 @@
             }
             showLoading(false);
         }
-        
+
         async function searchLuke() {
             showLoading(true);
             try {
@@ -187,11 +205,69 @@
             }
             showLoading(false);
         }
-        
+
+        async function testUpdateCard() {
+            showLoading(true);
+            try {
+                // Primero obtener una carta para mostrar el estado actual
+                const getResponse = await fetch(`${API_BASE}/cards/1SOR/001`);
+                if (!getResponse.ok) throw new Error(`Error obteniendo carta: ${getResponse.status}`);
+
+                const cardData = await getResponse.json();
+                const currentCard = cardData.data;
+
+                displayResult('🔍 Estado Actual de 1SOR-001', {
+                    nombre: currentCard.name,
+                    copias_totales: currentCard.copies,
+                    variantes_actuales: currentCard.variants
+                });
+
+                // Ahora actualizar la carta (agregar 1 normal y 1 foil)
+                const updateData = {
+                    normal: (currentCard.variants.normal || 0) + 1,
+                    foil: (currentCard.variants.foil || 0) + 1
+                };
+
+                const updateResponse = await fetch(`${API_BASE}/cards/1SOR/001`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (updateResponse.ok) {
+                    const updateResult = await updateResponse.json();
+                    updateStatus('🟢 Carta actualizada exitosamente', 'online');
+
+                    // Obtener el estado actualizado
+                    const newGetResponse = await fetch(`${API_BASE}/cards/1SOR/001`);
+                    const newCardData = await newGetResponse.json();
+                    const updatedCard = newCardData.data;
+
+                    displayResult('✅ Estado Después de Actualización', {
+                        nombre: updatedCard.name,
+                        copias_totales_nuevas: updatedCard.copies,
+                        copias_totales_anteriores: currentCard.copies,
+                        cambio: `+${updatedCard.copies - currentCard.copies} copias`,
+                        variantes_nuevas: updatedCard.variants,
+                        actualizacion_enviada: updateData
+                    });
+                } else {
+                    throw new Error(`HTTP ${updateResponse.status}: ${await updateResponse.text()}`);
+                }
+            } catch (error) {
+                updateStatus('🔴 Error actualizando carta: ' + error.message, 'error');
+                displayResult('Error en Actualización', { error: error.message });
+            }
+            showLoading(false);
+        }
+
         // Test inicial de conexión
         document.addEventListener('DOMContentLoaded', () => {
             testConnection();
         });
     </script>
 </body>
+
 </html>

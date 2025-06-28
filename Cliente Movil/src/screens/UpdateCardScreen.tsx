@@ -48,7 +48,7 @@ const UpdateCardScreen: React.FC = () => {
   });
 
   const sets = ['5LOF', '1SOR', '2SHD', '3TWI', '4TDA'];
-  
+
   const variantLabels = {
     normal: 'Normal',
     foil: 'Foil',
@@ -159,7 +159,7 @@ const UpdateCardScreen: React.FC = () => {
         {/* Información de la carta */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Identificación de la Carta</Text>
-          
+
           <Text style={styles.label}>Set:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
             {sets.map((set) => (
@@ -189,7 +189,7 @@ const UpdateCardScreen: React.FC = () => {
         {/* Cantidades por variante */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cantidades por Variante</Text>
-          
+
           {Object.entries(variantLabels).map(([variant, label]) => (
             <View key={variant} style={styles.quantityRow}>
               <Text style={styles.quantityLabel}>{label}:</Text>
