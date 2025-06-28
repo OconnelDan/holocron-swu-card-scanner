@@ -1,7 +1,7 @@
 import axios from 'axios';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import * as cheerio from 'cheerio';
-import { Card, ICard } from '../models';
+import { Card } from '../models';
 import { config, logger } from '../utils';
 
 /**
@@ -186,51 +186,49 @@ export class CardScrapingService {
     try {
       const swudbCards = await this.fetchCardsFromSwudb();
       let updatedCount = 0; for (const cardData of swudbCards) {
-        const cardDoc: Partial<ICard> = {
+        const cardDoc: any = {
           swudbId: cardData.id,
           name: cardData.name,
           cardNumber: cardData.cardNumber,
           setCode: cardData.set.code,
-          setName: cardData.set.name,
-          rarity: cardData.rarity as ICard['rarity'],
-          type: cardData.type as ICard['type'],
-          aspects: cardData.aspects,
-          lastUpdated: new Date(),
-          scrapingMetadata: {
-            lastScraped: new Date(),
-            source: 'swudb',
+          rarity: cardData.rarity,
+          type: cardData.type,
+          aspect1: cardData.aspects[0],
+          copies: 0, // Inicializar en 0 para nuevas cartas
+          variants: {
+            normal: 0,
+            foil: 0,
+            hyperspace: 0,
+            foil_hyperspace: 0,
+            showcase: 0,
+            organized_play: 0,
+            event_exclusive: 0,
+            prerelease_promo: 0,
+            organized_play_foil: 0,
+            standard_prestige: 0,
+            foil_prestige: 0,
+            serialized_prestige: 0,
           },
+          lastUpdated: new Date(),
         };
 
-        // Agregamos campos opcionales solo si están presentes
-        if (cardData.subtitle) {
-          cardDoc.subtitle = cardData.subtitle;
+        // Agregar aspect2 solo si existe
+        if (cardData.aspects[1]) {
+          cardDoc.aspect2 = cardData.aspects[1];
         }
+
+        // Agregamos campos opcionales solo si están presentes
         if (cardData.cost !== undefined) {
           cardDoc.cost = cardData.cost;
         }
-        if (cardData.power !== undefined) {
-          cardDoc.power = cardData.power;
-        }
-        if (cardData.hp !== undefined) {
-          cardDoc.hp = cardData.hp;
-        } if (cardData.arena && (cardData.arena === 'Ground' || cardData.arena === 'Space')) {
+        if (cardData.arena && (cardData.arena === 'Ground' || cardData.arena === 'Space')) {
           cardDoc.arena = cardData.arena;
         }
-        if (cardData.text) {
-          cardDoc.text = cardData.text;
-        }
-        if (cardData.imageUrl) {
-          cardDoc.imageUrl = cardData.imageUrl;
-        }
-        if (cardData.imageUrlHd) {
-          cardDoc.imageUrlHd = cardData.imageUrlHd;
-        }
         if (cardData.traits) {
-          cardDoc.traits = cardData.traits;
-        }
-        if (cardData.keywords) {
-          cardDoc.keywords = cardData.keywords;
+          // Convertir array de traits a string separado por comas
+          cardDoc.traits = Array.isArray(cardData.traits)
+            ? cardData.traits.join(', ')
+            : cardData.traits;
         }
 
         await Card.findOneAndUpdate(

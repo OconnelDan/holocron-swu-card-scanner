@@ -12,9 +12,29 @@ const router = Router();
  * @query set - Filtrar por código de set
  * @query type - Filtrar por tipo de carta
  * @query rarity - Filtrar por rareza
- * @query search - Búsqueda por nombre/subtítulo
+ * @query search - Búsqueda por nombre/traits
  */
 router.get('/', CardsController.getCards);
+
+/**
+ * @route GET /api/cards/collection/stats
+ * @desc Obtiene estadísticas de la colección
+ * @access Public
+ */
+router.get('/collection/stats', CardsController.getCollectionStats);
+
+/**
+ * @route GET /api/cards/collection/owned
+ * @desc Obtiene solo las cartas que posee el usuario
+ * @access Public
+ * @query page - Página (default: 1)
+ * @query limit - Elementos por página (default: 20, max: 100)
+ * @query set - Filtrar por código de set
+ * @query type - Filtrar por tipo de carta
+ * @query rarity - Filtrar por rareza
+ * @query search - Búsqueda por nombre/traits
+ */
+router.get('/collection/owned', CardsController.getOwnedCards);
 
 /**
  * @route GET /api/cards/search
@@ -23,6 +43,15 @@ router.get('/', CardsController.getCards);
  * @query q - Texto a buscar
  */
 router.get('/search', CardsController.searchCards);
+
+/**
+ * @route GET /api/cards/:setCode/:cardNumber
+ * @desc Obtiene una carta específica por set y número
+ * @access Public
+ * @param setCode - Código del set (1SOR, 2SHD, etc.)
+ * @param cardNumber - Número de la carta (001, 002, etc.)
+ */
+router.get('/:setCode/:cardNumber', CardsController.getCardBySetAndNumber);
 
 /**
  * @route GET /api/cards/:id

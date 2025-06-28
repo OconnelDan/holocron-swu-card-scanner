@@ -72,7 +72,7 @@ function transformToMongoCard(collectionCard: CollectionCard): any {
     imageUrl: '', // No disponible en la colección
     swudbId: collectionCard.swudbId,
     lastUpdated: new Date(),
-    
+
     // Información de colección personal
     personalCollection: {
       owned: true,
@@ -86,59 +86,59 @@ function transformToMongoCard(collectionCard: CollectionCard): any {
 async function importJsonToMongo() {
   try {
     logger.info('🚀 Iniciando importación de JSON a MongoDB...');
-    
+
     // Conectar a MongoDB
     await connectToDatabase();
     logger.info('✅ Conectado a MongoDB');
-    
+
     // Leer archivo JSON
     const jsonPath = path.resolve(__dirname, '../src/data/collection.json');
-    
+
     if (!fs.existsSync(jsonPath)) {
       logger.error('❌ No se encontró el archivo JSON en:', jsonPath);
       process.exit(1);
     }
-    
+
     const jsonData = fs.readFileSync(jsonPath, 'utf8');
     const cards: CollectionCard[] = JSON.parse(jsonData);
-    
+
     logger.info(`📋 Cargadas ${cards.length} cartas del JSON`);
-    
+
     // Limpiar colección existente (opcional)
     logger.info('🧹 Limpiando colección existente...');
     await Card.deleteMany({});
-    
+
     // Preparar operaciones de bulkWrite
     const bulkOps = cards.map(card => ({
       insertOne: {
         document: transformToMongoCard(card)
       }
     }));
-    
+
     logger.info(`📦 Preparando ${bulkOps.length} operaciones de inserción...`);
-    
+
     // Ejecutar bulkWrite con ordered: false para continuar en caso de duplicados
     let importedCount = 0;
     let errorCount = 0;
-    
+
     try {
-      const result = await Card.bulkWrite(bulkOps, { 
+      const result = await Card.bulkWrite(bulkOps, {
         ordered: false,
-        bypassDocumentValidation: false 
+        bypassDocumentValidation: false
       });
-      
+
       importedCount = result.insertedCount;
       logger.info(`✅ Cartas importadas exitosamente: ${importedCount}`);
-      
+
     } catch (error: any) {
       // Manejar errores de duplicados individualmente
       if (error.name === 'BulkWriteError' && error.result) {
         importedCount = error.result.insertedCount;
         errorCount = error.writeErrors?.length || 0;
-        
+
         logger.info(`✅ Cartas importadas: ${importedCount}`);
         logger.warn(`⚠️ Errores (probablemente duplicados): ${errorCount}`);
-        
+
         // Loguear algunos errores específicos
         if (error.writeErrors && error.writeErrors.length > 0) {
           error.writeErrors.slice(0, 5).forEach((writeError: any) => {
@@ -149,7 +149,7 @@ async function importJsonToMongo() {
               logger.error(`❌ Error de escritura:`, writeError.err);
             }
           });
-          
+
           if (error.writeErrors.length > 5) {
             logger.warn(`... y ${error.writeErrors.length - 5} errores más`);
           }
@@ -158,11 +158,11 @@ async function importJsonToMongo() {
         throw error;
       }
     }
-    
+
     // Verificar resultados
     const totalInMongo = await Card.countDocuments();
     logger.info(`🔍 Verificación: ${totalInMongo} cartas en MongoDB`);
-    
+
     // Mostrar estadísticas
     const setStats = await Card.aggregate([
       {
@@ -174,25 +174,25 @@ async function importJsonToMongo() {
       },
       { $sort: { _id: 1 } }
     ]);
-    
+
     logger.info('📊 Estadísticas por set:');
     setStats.forEach(stat => {
       logger.info(`   - ${stat._id.toUpperCase()}: ${stat.count} cartas únicas, ${stat.totalQuantity} cartas físicas`);
     });
-    
+
     logger.info('🎉 Importación a MongoDB completada!');
     logger.info('📈 Estadísticas:');
     logger.info(`   • Cartas importadas: ${importedCount}`);
     logger.info(`   • Total procesadas: ${cards.length}`);
     logger.info(`   • Errores: ${errorCount}`);
-    
+
     return {
       success: true,
       imported: importedCount,
       total: cards.length,
       errors: errorCount
     };
-    
+
   } catch (error: any) {
     logger.error('💥 Error durante la importación:', error);
     return {

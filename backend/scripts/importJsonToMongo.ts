@@ -32,7 +32,7 @@ function mapSetCodeToName(setCode: string): string {
     'TWI': 'Twilight of the Republic',
     'TWI2': 'Twilight of the Republic 2',
   };
-  
+
   return setMapping[setCode] || setCode;
 }
 
@@ -45,17 +45,17 @@ async function importFromJson() {
 
     // Leer el archivo JSON generado
     const jsonPath = path.resolve(__dirname, '../src/data/collection.json');
-    
+
     if (!fs.existsSync(jsonPath)) {
       logger.error('❌ No se encontró el archivo collection.json en:', jsonPath);
       process.exit(1);
     }
 
     logger.info('📖 Leyendo archivo JSON:', jsonPath);
-    
+
     const jsonData = fs.readFileSync(jsonPath, 'utf8');
     const cards: CollectionCard[] = JSON.parse(jsonData);
-    
+
     logger.info(`📋 Encontradas ${cards.length} cartas en el JSON`);
 
     // Limpiar colección existente (comentado para evitar problemas de auth)
@@ -67,14 +67,21 @@ async function importFromJson() {
 
     for (let i = 0; i < cards.length; i++) {
       const cardData = cards[i];
+
+      // Verificar que cardData existe
+      if (!cardData) {
+        logger.warn(`⚠️ Datos de carta faltantes en índice ${i}, saltando...`);
+        continue;
+      }
+
       try {
         // Generar ID único - usar índice si no hay número de carta
-        const cardNumber = cardData.number && cardData.number.trim() !== '' 
-          ? cardData.number 
+        const cardNumber = cardData.number && cardData.number.trim() !== ''
+          ? cardData.number
           : String(i + 1).padStart(4, '0'); // Usar índice como fallback
-        
+
         const swudbId = `manual-${cardData.set.toLowerCase()}-${cardNumber}`;
-        
+
         // Convertir al formato del modelo de MongoDB
         const cardDoc = {
           swudbId: swudbId, // ID único generado
@@ -102,7 +109,7 @@ async function importFromJson() {
         const newCard = new Card(cardDoc);
         await newCard.save();
         importedCount++;
-        
+
         if (importedCount % 100 === 0) {
           logger.info(`✅ Importadas ${importedCount} cartas...`);
         }

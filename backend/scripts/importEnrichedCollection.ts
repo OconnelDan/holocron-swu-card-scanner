@@ -77,14 +77,14 @@ function safeNumber(value: any): number {
  */
 function processEnrichedExcel(filePath: string): MongoCard[] {
   console.log('📖 Leyendo archivo Excel enriquecido:', filePath);
-  
+
   const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
-  
+
   if (!sheetName) {
     throw new Error('No se encontraron hojas en el archivo Excel');
   }
-  
+
   const worksheet = workbook.Sheets[sheetName];
   if (!worksheet) {
     throw new Error('No se pudo leer la hoja del Excel');
@@ -96,79 +96,96 @@ function processEnrichedExcel(filePath: string): MongoCard[] {
     defval: '',
     blankrows: false
   });
-  
+
   if (rawData.length < 2) {
     throw new Error('El Excel debe tener al menos cabeceras y una fila de datos');
   }
-  
+
   const headers: string[] = rawData[0] as string[];
   const dataRows = rawData.slice(1);
-  
+
   console.log('🔍 Cabeceras detectadas:', headers);
   console.log('📊 Filas de datos:', dataRows.length);
-  
+
   // Crear mapeo de índices de columnas
   const columnIndexes: Record<string, number> = {};
   headers.forEach((header, index) => {
     const normalized = normalizeHeader(header);
     columnIndexes[normalized] = index;
   });
-  
+
   // Verificar que tenemos las columnas necesarias
   const requiredColumns = ['set', 'base_card_id', 'name', 'rarity', 'type', 'aspects'];
   const missingColumns = requiredColumns.filter(col => columnIndexes[col] === undefined);
-  
+
   if (missingColumns.length > 0) {
     console.warn('⚠️ Columnas faltantes:', missingColumns);
   }
-  
+
   const processedCards = new Map<string, MongoCard>();
   let processedRows = 0;
   let skippedRows = 0;
-  
+
   dataRows.forEach((row: any[]) => {
     try {
-      const set = String(row[columnIndexes.set] || '').toLowerCase().trim();
-      const baseCardId = String(row[columnIndexes.base_card_id] || '').trim();
-      const name = String(row[columnIndexes.name] || '').trim();
-      
+      const setIndex = columnIndexes['set'];
+      const baseCardIdIndex = columnIndexes['base_card_id'];
+      const nameIndex = columnIndexes['name'];
+
+      if (setIndex === undefined || baseCardIdIndex === undefined || nameIndex === undefined) {
+        skippedRows++;
+        return;
+      }
+
+      const set = String(row[setIndex] || '').toLowerCase().trim();
+      const baseCardId = String(row[baseCardIdIndex] || '').trim();
+      const name = String(row[nameIndex] || '').trim();
+
       // Validar datos esenciales
       if (!set || !baseCardId || !name) {
         skippedRows++;
         return;
       }
-      
+
       const swudbId = `${set}-${baseCardId}`;
-      
+
       // Obtener metadatos (con valores por defecto si están vacíos)
-      const rarity = String(row[columnIndexes.rarity] || 'comun').trim();
-      const type = String(row[columnIndexes.type] || 'unidad').trim();
-      const aspectsStr = String(row[columnIndexes.aspects] || 'incoloro').trim();
+      const rarityIndex = columnIndexes['rarity'];
+      const typeIndex = columnIndexes['type'];
+      const aspectsIndex = columnIndexes['aspects'];
+
+      const rarity = rarityIndex !== undefined ? String(row[rarityIndex] || 'comun').trim() : 'comun';
+      const type = typeIndex !== undefined ? String(row[typeIndex] || 'unidad').trim() : 'unidad';
+      const aspectsStr = aspectsIndex !== undefined ? String(row[aspectsIndex] || 'incoloro').trim() : 'incoloro';
       const aspects = aspectsStr ? aspectsStr.split(', ').map(a => a.trim()) : ['incoloro'];
-      
+
       // Obtener estadísticas opcionales
-      const cost = columnIndexes.cost !== undefined ? safeNumber(row[columnIndexes.cost]) : undefined;
-      const power = columnIndexes.power !== undefined ? safeNumber(row[columnIndexes.power]) : undefined;
-      const hp = columnIndexes.hp !== undefined ? safeNumber(row[columnIndexes.hp]) : undefined;
-      
+      const costIndex = columnIndexes['cost'];
+      const powerIndex = columnIndexes['power'];
+      const hpIndex = columnIndexes['hp'];
+
+      const cost = costIndex !== undefined ? safeNumber(row[costIndex]) : undefined;
+      const power = powerIndex !== undefined ? safeNumber(row[powerIndex]) : undefined;
+      const hp = hpIndex !== undefined ? safeNumber(row[hpIndex]) : undefined;
+
       // Calcular variantes
       const variants: CardVariants = {
-        normal: safeNumber(row[columnIndexes.normal]),
-        foil: safeNumber(row[columnIndexes.foil]),
-        hyperspace: safeNumber(row[columnIndexes.hyperspace]),
-        foil_hyperspace: safeNumber(row[columnIndexes.foil_and_hyperspace]),
-        showcase: safeNumber(row[columnIndexes.showcase]),
-        organized_play: safeNumber(row[columnIndexes.organized_play]),
-        event_exclusive: safeNumber(row[columnIndexes.event_exclusive]),
-        prerelease_promo: safeNumber(row[columnIndexes.prerelease_promo]),
-        organized_play_foil: safeNumber(row[columnIndexes.organized_play_foil]),
-        standard_prestige: safeNumber(row[columnIndexes.standard_prestige]),
-        foil_prestige: safeNumber(row[columnIndexes.foil_prestige]),
-        serialized_prestige: safeNumber(row[columnIndexes.serialized_prestige])
+        normal: columnIndexes['normal'] !== undefined ? safeNumber(row[columnIndexes['normal']]) : 0,
+        foil: columnIndexes['foil'] !== undefined ? safeNumber(row[columnIndexes['foil']]) : 0,
+        hyperspace: columnIndexes['hyperspace'] !== undefined ? safeNumber(row[columnIndexes['hyperspace']]) : 0,
+        foil_hyperspace: columnIndexes['foil_and_hyperspace'] !== undefined ? safeNumber(row[columnIndexes['foil_and_hyperspace']]) : 0,
+        showcase: columnIndexes['showcase'] !== undefined ? safeNumber(row[columnIndexes['showcase']]) : 0,
+        organized_play: columnIndexes['organized_play'] !== undefined ? safeNumber(row[columnIndexes['organized_play']]) : 0,
+        event_exclusive: columnIndexes['event_exclusive'] !== undefined ? safeNumber(row[columnIndexes['event_exclusive']]) : 0,
+        prerelease_promo: columnIndexes['prerelease_promo'] !== undefined ? safeNumber(row[columnIndexes['prerelease_promo']]) : 0,
+        organized_play_foil: columnIndexes['organized_play_foil'] !== undefined ? safeNumber(row[columnIndexes['organized_play_foil']]) : 0,
+        standard_prestige: columnIndexes['standard_prestige'] !== undefined ? safeNumber(row[columnIndexes['standard_prestige']]) : 0,
+        foil_prestige: columnIndexes['foil_prestige'] !== undefined ? safeNumber(row[columnIndexes['foil_prestige']]) : 0,
+        serialized_prestige: columnIndexes['serialized_prestige'] !== undefined ? safeNumber(row[columnIndexes['serialized_prestige']]) : 0
       };
-      
+
       const totalQuantity = Object.values(variants).reduce((sum, qty) => sum + qty, 0);
-      
+
       // Solo procesar si tiene cantidad > 0
       if (totalQuantity > 0) {
         if (processedCards.has(swudbId)) {
@@ -193,31 +210,31 @@ function processEnrichedExcel(filePath: string): MongoCard[] {
               totalQuantity
             }
           };
-          
+
           // Añadir estadísticas si están disponibles
           if (cost !== undefined && cost > 0) card.cost = cost;
           if (power !== undefined && power > 0) card.power = power;
           if (hp !== undefined && hp > 0) card.hp = hp;
-          
+
           processedCards.set(swudbId, card);
         }
         processedRows++;
       } else {
         skippedRows++;
       }
-      
+
     } catch (error) {
       console.error(`❌ Error procesando fila:`, error);
       skippedRows++;
     }
   });
-  
+
   const cards = Array.from(processedCards.values());
-  
+
   console.log(`✅ Procesadas ${processedRows} filas válidas`);
   console.log(`⚠️ Omitidas ${skippedRows} filas (sin cantidad o datos inválidos)`);
   console.log(`🎯 Total de cartas únicas: ${cards.length}`);
-  
+
   return cards;
 }
 
@@ -225,21 +242,21 @@ function processEnrichedExcel(filePath: string): MongoCard[] {
  * Importa las cartas a MongoDB
  */
 async function importToMongoDB(cards: MongoCard[]): Promise<void> {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/holocron';
+  const mongoUri = process.env['MONGODB_URI'] || 'mongodb://localhost:27017/holocron';
   console.log('🔌 Conectando a MongoDB:', mongoUri);
-  
+
   const client = new MongoClient(mongoUri);
-  
+
   try {
     await client.connect();
     const db = client.db();
     const collection = db.collection('cards');
-    
+
     console.log('🗑️ Limpiando colección existente...');
     await collection.deleteMany({});
-    
+
     console.log('📦 Importando cartas a MongoDB...');
-    
+
     // Usar bulkWrite para manejar duplicados
     const operations = cards.map(card => ({
       replaceOne: {
@@ -248,23 +265,23 @@ async function importToMongoDB(cards: MongoCard[]): Promise<void> {
         upsert: true
       }
     }));
-    
+
     const result = await collection.bulkWrite(operations, { ordered: false });
-    
+
     console.log('✅ Importación completada:');
     console.log(`   - Insertadas: ${result.upsertedCount}`);
     console.log(`   - Actualizadas: ${result.modifiedCount}`);
     console.log(`   - Total procesadas: ${result.upsertedCount + result.modifiedCount}`);
-    
+
     // Verificar algunos documentos
     const sampleCards = await collection.find({}).limit(3).toArray();
     console.log('🔍 Muestra de cartas importadas:');
     sampleCards.forEach(card => {
-      console.log(`   - ${card.name} (${card.swudbId}) - ${card.rarity} ${card.type}`);
-      console.log(`     Aspects: ${card.aspects.join(', ')}`);
-      console.log(`     Cantidad total: ${card.personalCollection.totalQuantity}`);
+      console.log(`   - ${card['name']} (${card['swudbId']}) - ${card['rarity']} ${card['type']}`);
+      console.log(`     Aspects: ${card['aspects'].join(', ')}`);
+      console.log(`     Cantidad total: ${card['personalCollection'].totalQuantity}`);
     });
-    
+
   } catch (error) {
     console.error('❌ Error importando a MongoDB:', error);
     throw error;
@@ -279,29 +296,29 @@ async function importToMongoDB(cards: MongoCard[]): Promise<void> {
 async function importEnrichedCollection(): Promise<void> {
   try {
     console.log('🚀 Iniciando importación desde Excel enriquecido...');
-    
+
     // Buscar archivo enriquecido
     const enrichedPath = path.resolve(__dirname, '../../CollectionExport_enriched.xlsx');
-    
+
     if (!fs.existsSync(enrichedPath)) {
       console.error('❌ No se encontró el archivo Excel enriquecido en:', enrichedPath);
       console.error('💡 Ejecuta primero: npm run enrich');
       process.exit(1);
     }
-    
+
     // Procesar Excel
     const cards = processEnrichedExcel(enrichedPath);
-    
+
     if (cards.length === 0) {
       console.error('❌ No se encontraron cartas válidas para importar');
       process.exit(1);
     }
-    
+
     // Importar a MongoDB
     await importToMongoDB(cards);
-    
+
     console.log('🎉 Importación de colección enriquecida completada exitosamente!');
-    
+
   } catch (error) {
     console.error('❌ Error en importación:', error);
     process.exit(1);

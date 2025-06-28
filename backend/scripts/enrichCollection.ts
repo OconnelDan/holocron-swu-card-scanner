@@ -32,7 +32,7 @@ interface ApiResponse {
 // Mapas de traducción EN → ES
 const rarityMap: Record<string, string> = {
   'Legendary': 'legendaria',
-  'Rare': 'rara', 
+  'Rare': 'rara',
   'Uncommon': 'infrecuente',
   'Common': 'comun'
 };
@@ -48,7 +48,7 @@ const typeMap: Record<string, string> = {
 
 const aspectMap: Record<string, string> = {
   'Heroism': 'heroismo',
-  'Villainy': 'maldad', 
+  'Villainy': 'maldad',
   'Command': 'mando',
   'Vigilance': 'vigilancia',
   'Cunning': 'astucia',
@@ -58,7 +58,7 @@ const aspectMap: Record<string, string> = {
 
 const setCodeMap: Record<string, string> = {
   'sor': 'SOR',
-  'shd': 'SHD', 
+  'shd': 'SHD',
   'twi': 'TWI',
   'jtl': 'JTL'
 };
@@ -69,7 +69,7 @@ const setCodeMap: Record<string, string> = {
 async function downloadCardData(): Promise<Map<string, ApiCard>> {
   const cacheDir = path.resolve(__dirname, '../.cache');
   const cacheFile = path.join(cacheDir, 'cards.json');
-  
+
   // Crear directorio de cache si no existe
   if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
@@ -81,11 +81,11 @@ async function downloadCardData(): Promise<Map<string, ApiCard>> {
   if (fs.existsSync(cacheFile)) {
     console.log('📁 Cargando datos desde cache...');
     cardsData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-    
+
     // Solo descargar si el cache está muy viejo (más de 7 días)
     const cacheStats = fs.statSync(cacheFile);
     const isVeryOld = Date.now() - cacheStats.mtime.getTime() > 7 * 24 * 60 * 60 * 1000; // 7 días
-    
+
     if (!isVeryOld) {
       console.log(`✅ Usando cache con ${cardsData.length} cartas`);
       // Crear índice directamente del cache
@@ -102,7 +102,7 @@ async function downloadCardData(): Promise<Map<string, ApiCard>> {
   // Si no hay cache o está viejo, descargar desde API
   if (cardsData.length === 0) {
     console.log('🌐 Descargando datos de cartas desde API...');
-    
+
     try {
       // Intentar API primero
       const response = await axios.get('https://api.swu-db.com/cards');
@@ -152,7 +152,7 @@ function translateCard(card: ApiCard): { rarity: string; type: string; aspects: 
   const rarity = rarityMap[card.rarity] || card.rarity.toLowerCase();
   const type = typeMap[card.type] || card.type.toLowerCase();
   const aspects = card.aspects.map(aspect => aspectMap[aspect] || aspect.toLowerCase()).join(', ');
-  
+
   return { rarity, type, aspects };
 }
 
@@ -163,7 +163,7 @@ function findCard(cardIndex: Map<string, ApiCard>, set: string, baseCardId: stri
   const setCode = setCodeMap[set.toLowerCase()] || set.toUpperCase();
   const key1 = `${set.toLowerCase()}-${baseCardId}`;
   const key2 = `${setCode}-${baseCardId}`;
-  
+
   return cardIndex.get(key1) || cardIndex.get(key2) || null;
 }
 
@@ -173,13 +173,13 @@ function findCard(cardIndex: Map<string, ApiCard>, set: string, baseCardId: stri
 async function enrichCollection(): Promise<void> {
   try {
     console.log('🚀 Iniciando enriquecimiento de colección...');
-    
+
     // Descargar datos de cartas
     const cardIndex = await downloadCardData();
-    
+
     // Leer archivo Excel original
     const excelPath = path.resolve(__dirname, '../../CollectionExport OCONNEL.xlsx');
-    
+
     if (!fs.existsSync(excelPath)) {
       console.error('❌ No se encontró el archivo Excel en:', excelPath);
       process.exit(1);
@@ -192,7 +192,7 @@ async function enrichCollection(): Promise<void> {
       console.error('❌ No se encontraron hojas en el archivo Excel');
       process.exit(1);
     }
-    
+
     const worksheet = workbook.Sheets[sheetName];
     if (!worksheet) {
       console.error('❌ No se pudo leer la hoja del Excel');
@@ -233,7 +233,7 @@ async function enrichCollection(): Promise<void> {
 
       // Buscar carta en el índice
       const card = findCard(cardIndex, set, baseCardId);
-      
+
       if (card) {
         const translated = translateCard(card);
         const newRow = [
@@ -258,7 +258,7 @@ async function enrichCollection(): Promise<void> {
 
     console.log(`✅ Enriquecidas: ${enrichedCount} cartas`);
     console.log(`⚠️ No encontradas: ${notFoundCount} cartas`);
-    
+
     if (notFoundCards.length > 0) {
       console.log('🔍 Cartas no encontradas:');
       notFoundCards.slice(0, 10).forEach(card => console.log(`   - ${card}`));
@@ -280,28 +280,28 @@ async function enrichCollection(): Promise<void> {
 
     // Validar datos
     console.log('🔍 Validando datos enriquecidos...');
-    
+
     const validRarities = Object.values(rarityMap);
     const validTypes = Object.values(typeMap);
     const validAspects = Object.values(aspectMap);
-    
+
     let validationErrors = 0;
-    
+
     enrichedData.slice(1).forEach((row, index) => {
       const rarity = row[headers.length];
       const type = row[headers.length + 1];
       const aspects = row[headers.length + 2];
-      
+
       if (rarity && !validRarities.includes(rarity)) {
         console.error(`❌ Rarity inválida en fila ${index + 2}: ${rarity}`);
         validationErrors++;
       }
-      
+
       if (type && !validTypes.includes(type)) {
         console.error(`❌ Type inválido en fila ${index + 2}: ${type}`);
         validationErrors++;
       }
-      
+
       if (aspects) {
         const aspectList = aspects.split(', ');
         aspectList.forEach((aspect: string) => {

@@ -32,7 +32,7 @@ export class CardsController {  /**
       if (req.query['search']) {
         filters['$or'] = [
           { name: { $regex: req.query['search'], $options: 'i' } },
-          { subtitle: { $regex: req.query['search'], $options: 'i' } },
+          { traits: { $regex: req.query['search'], $options: 'i' } },
         ];
       }
 
@@ -114,10 +114,7 @@ export class CardsController {  /**
       const cards = await Card.find({
         $or: [
           { name: { $regex: q, $options: 'i' } },
-          { subtitle: { $regex: q, $options: 'i' } },
-          { text: { $regex: q, $options: 'i' } },
-          { traits: { $in: [new RegExp(q, 'i')] } },
-          { keywords: { $in: [new RegExp(q, 'i')] } },
+          { traits: { $regex: q, $options: 'i' } },
         ],
       })
         .select('-__v')
@@ -135,6 +132,186 @@ export class CardsController {  /**
       res.status(500).json({
         error: 'Error interno del servidor',
         message: 'No se pudo realizar la búsqueda',
+      });
+    }
+  }
+
+  /**
+   * Obtiene estadísticas de la colección
+   */
+  static async getCollectionStats(_req: Request, res: Response): Promise<void> {
+    try {
+      const totalCards = await Card.countDocuments({});
+      const ownedCards = await Card.countDocuments({ copies: { $gt: 0 } });
+      const totalPhysicalCards = await Card.aggregate([
+        { $group: { _id: null, total: { $sum: '$copies' } } }
+      ]);
+
+      // Estadísticas por set
+      const statsBySet = await Card.aggregate([
+        {
+          $group: {
+            _id: '$setCode',
+            totalCards: { $sum: 1 },
+            ownedCards: { $sum: { $cond: [{ $gt: ['$copies', 0] }, 1, 0] } },
+            totalPhysicalCards: { $sum: '$copies' }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+
+      // Estadísticas por rareza
+      const statsByRarity = await Card.aggregate([
+        {
+          $group: {
+            _id: '$rarity',
+            totalCards: { $sum: 1 },
+            ownedCards: { $sum: { $cond: [{ $gt: ['$copies', 0] }, 1, 0] } },
+            totalPhysicalCards: { $sum: '$copies' }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+
+      res.status(200).json({
+        data: {
+          overview: {
+            totalCards,
+            ownedCards,
+            totalPhysicalCards: totalPhysicalCards[0]?.total || 0,
+            completionPercentage: ((ownedCards / totalCards) * 100).toFixed(1)
+          },
+          bySet: statsBySet.map(stat => ({
+            setCode: stat._id,
+            totalCards: stat.totalCards,
+            ownedCards: stat.ownedCards,
+            totalPhysicalCards: stat.totalPhysicalCards,
+            completionPercentage: ((stat.ownedCards / stat.totalCards) * 100).toFixed(1)
+          })),
+          byRarity: statsByRarity.map(stat => ({
+            rarity: stat._id,
+            totalCards: stat.totalCards,
+            ownedCards: stat.ownedCards,
+            totalPhysicalCards: stat.totalPhysicalCards,
+            completionPercentage: ((stat.ownedCards / stat.totalCards) * 100).toFixed(1)
+          }))
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error obteniendo estadísticas de colección:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        message: 'No se pudieron obtener las estadísticas',
+      });
+    }
+  }
+
+  /**
+   * Obtiene cartas de la colección del usuario (solo las que posee)
+   */
+  static async getOwnedCards(req: Request, res: Response): Promise<void> {
+    try {
+      const page = parseInt((req.query['page'] as string) ?? '1', 10) || 1;
+      const limit = Math.min(parseInt((req.query['limit'] as string) ?? '20', 10) || 20, 100);
+      const skip = (page - 1) * limit;
+
+      // Filtros opcionales
+      const filters: Record<string, unknown> = { copies: { $gt: 0 } };
+
+      if (req.query['set']) {
+        filters['setCode'] = req.query['set'];
+      }
+
+      if (req.query['type']) {
+        filters['type'] = req.query['type'];
+      }
+
+      if (req.query['rarity']) {
+        filters['rarity'] = req.query['rarity'];
+      }
+
+      if (req.query['search']) {
+        filters['$and'] = [
+          { copies: { $gt: 0 } },
+          {
+            $or: [
+              { name: { $regex: req.query['search'], $options: 'i' } },
+              { traits: { $regex: req.query['search'], $options: 'i' } },
+            ]
+          }
+        ];
+        delete filters['copies'];
+      }
+
+      const [cards, total] = await Promise.all([
+        Card.find(filters)
+          .select('-__v')
+          .sort({ setCode: 1, cardNumber: 1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Card.countDocuments(filters),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      res.status(200).json({
+        data: cards,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      });
+
+    } catch (error) {
+      logger.error('Error obteniendo cartas de la colección:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        message: 'No se pudieron obtener las cartas de la colección',
+      });
+    }
+  }
+
+  /**
+   * Obtiene una carta por setCode y cardNumber (formato alternativo al ID)
+   */
+  static async getCardBySetAndNumber(req: Request, res: Response): Promise<void> {
+    try {
+      const { setCode, cardNumber } = req.params;
+
+      if (!setCode || !cardNumber) {
+        res.status(400).json({
+          error: 'Parámetros requeridos',
+          message: 'Debe proporcionar setCode y cardNumber',
+        });
+        return;
+      }
+
+      const card = await Card.findOne({
+        setCode: setCode.toUpperCase(),
+        cardNumber
+      }).select('-__v').lean();
+
+      if (!card) {
+        res.status(404).json({
+          error: 'Carta no encontrada',
+          message: `No existe carta ${setCode.toUpperCase()}-${cardNumber}`,
+        });
+        return;
+      }
+
+      res.status(200).json({ data: card });
+
+    } catch (error) {
+      logger.error('Error obteniendo carta por set y número:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        message: 'No se pudo obtener la carta',
       });
     }
   }

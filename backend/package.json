@@ -15,8 +15,10 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "scrape:cards": "ts-node scripts/scrapeCards.ts",
     "enrich": "ts-node scripts/enrichCollection.ts",
+    "merge:collections": "ts-node scripts/mergeCollections.ts",
     "import:collection": "ts-node scripts/importCollection.ts",
     "import:enriched": "ts-node scripts/importEnrichedCollection.ts",
+    "import:definitive": "ts-node scripts/importDefinitiveCollection.ts",
     "import:json": "ts-node scripts/importJsonToMongo.ts",
     "docker:build": "docker build -t holocron-swu-backend .",
     "docker:run": "docker-compose up -d"

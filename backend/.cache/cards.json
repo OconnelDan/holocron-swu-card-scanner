@@ -6,31 +6,39 @@
     "number": "001",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Cunning", "Villainy"],
+    "aspects": [
+      "Cunning",
+      "Villainy"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
   },
   {
-    "id": "SOR-002", 
+    "id": "SOR-002",
     "name": "Iden Versio, Inferno Squad Commander",
     "set": "SOR",
-    "number": "002", 
+    "number": "002",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Cunning", "Villainy"],
+    "aspects": [
+      "Cunning",
+      "Villainy"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
   },
   {
     "id": "SOR-003",
-    "name": "Chewbacca, Walking Carpet", 
+    "name": "Chewbacca, Walking Carpet",
     "set": "SOR",
     "number": "003",
     "rarity": "Legendary",
     "type": "Unit",
-    "aspects": ["Heroism"],
+    "aspects": [
+      "Heroism"
+    ],
     "cost": 8,
     "power": 6,
     "hp": 8
@@ -38,11 +46,14 @@
   {
     "id": "SOR-004",
     "name": "Chirrut Îmwe, One with the Force",
-    "set": "SOR", 
+    "set": "SOR",
     "number": "004",
     "rarity": "Legendary",
     "type": "Unit",
-    "aspects": ["Heroism", "Vigilance"],
+    "aspects": [
+      "Heroism",
+      "Vigilance"
+    ],
     "cost": 4,
     "power": 3,
     "hp": 4
@@ -52,9 +63,12 @@
     "name": "Luke Skywalker, Faithful Friend",
     "set": "SOR",
     "number": "005",
-    "rarity": "Legendary", 
+    "rarity": "Legendary",
     "type": "Unit",
-    "aspects": ["Heroism", "Vigilance"],
+    "aspects": [
+      "Heroism",
+      "Vigilance"
+    ],
     "cost": 6,
     "power": 4,
     "hp": 6
@@ -65,32 +79,41 @@
     "set": "SOR",
     "number": "006",
     "rarity": "Legendary",
-    "type": "Leader", 
-    "aspects": ["Cunning", "Villainy"],
+    "type": "Leader",
+    "aspects": [
+      "Cunning",
+      "Villainy"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
   },
   {
-    "id": "SOR-007", 
+    "id": "SOR-007",
     "name": "Grand Moff Tarkin, Oversector Governor",
     "set": "SOR",
     "number": "007",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Command", "Villainy"],
+    "aspects": [
+      "Command",
+      "Villainy"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
   },
   {
     "id": "SOR-008",
-    "name": "Hera Syndulla, Spectre Two", 
+    "name": "Hera Syndulla, Spectre Two",
     "set": "SOR",
     "number": "008",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Command", "Heroism"],
+    "aspects": [
+      "Command",
+      "Heroism"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
@@ -99,10 +122,13 @@
     "id": "SOR-009",
     "name": "Leia Organa, Alliance General",
     "set": "SOR",
-    "number": "009", 
+    "number": "009",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Command", "Heroism"],
+    "aspects": [
+      "Command",
+      "Heroism"
+    ],
     "cost": null,
     "power": null,
     "hp": 20
@@ -114,7 +140,10 @@
     "number": "010",
     "rarity": "Legendary",
     "type": "Leader",
-    "aspects": ["Aggression", "Villainy"], 
+    "aspects": [
+      "Aggression",
+      "Villainy"
+    ],
     "cost": null,
     "power": null,
     "hp": 25

@@ -51,7 +51,7 @@ function normalizeHeader(header: string): string {
  */
 function createHeaderMap(headers: string[]): Map<string, string> {
   const map = new Map<string, string>();
-  
+
   const expectedHeaders: { [key: string]: string } = {
     'set': 'set',
     'base_card_id': 'baseCardId',
@@ -69,14 +69,14 @@ function createHeaderMap(headers: string[]): Map<string, string> {
     'foil_prestige': 'foil_prestige',
     'serialized_prestige': 'serialized_prestige'
   };
-  
+
   headers.forEach((header) => {
     const normalized = normalizeHeader(header);
     if (expectedHeaders[normalized]) {
       map.set(header, expectedHeaders[normalized]);
     }
   });
-  
+
   return map;
 }
 
@@ -91,17 +91,17 @@ function safeNumber(value: any): number {
 async function importCollection() {
   try {
     console.log('🚀 Iniciando importación de colección...');
-    
+
     // Ruta al archivo Excel
     const excelPath = path.resolve(__dirname, '../../CollectionExport OCONNEL.xlsx');
-    
+
     if (!fs.existsSync(excelPath)) {
       console.error('❌ No se encontró el archivo Excel en:', excelPath);
       process.exit(1);
     }
 
     console.log('📖 Leyendo archivo Excel:', excelPath);
-    
+
     // Leer el archivo Excel con configuración específica
     const workbook = XLSX.readFile(excelPath, {
       type: 'buffer',
@@ -109,20 +109,20 @@ async function importCollection() {
       cellNF: false,
       cellText: false
     });
-    
+
     console.log('📊 Hojas disponibles:', workbook.SheetNames);
-    
+
     // Usar la hoja 'Data' o la primera disponible
     const sheetName = workbook.SheetNames.includes('Data') ? 'Data' : workbook.SheetNames[0];
     console.log('📋 Usando hoja:', sheetName);
-    
+
     if (!sheetName) {
       console.error('❌ No se encontraron hojas en el archivo Excel');
       process.exit(1);
     }
-    
+
     const worksheet = workbook.Sheets[sheetName];
-    
+
     if (!worksheet) {
       console.error('❌ No se pudo leer la hoja del Excel');
       process.exit(1);
@@ -134,39 +134,39 @@ async function importCollection() {
       defval: '',
       blankrows: false
     });
-    
+
     if (rawData.length < 2) {
       console.error('❌ El Excel debe tener al menos cabeceras y una fila de datos');
       process.exit(1);
     }
-    
+
     const headers = rawData[0];
     const dataRows = rawData.slice(1);
-    
+
     console.log('🔍 Cabeceras detectadas:', headers);
     console.log('📊 Filas de datos:', dataRows.length);
-    
+
     // Crear mapeo de cabeceras
     const headerMap = createHeaderMap(headers);
     console.log('🗺️ Mapeo de cabeceras:', Object.fromEntries(headerMap));
-    
+
     // Verificar que tenemos las columnas esenciales
     const requiredFields = ['Set', 'Base card id', 'Name'];
-    const missingFields = requiredFields.filter(field => 
+    const missingFields = requiredFields.filter(field =>
       !headers.some((h: string) => normalizeHeader(h) === normalizeHeader(field))
     );
-    
+
     if (missingFields.length > 0) {
       console.error('❌ Faltan columnas requeridas:', missingFields);
       console.error('❌ Cabeceras encontradas:', headers);
       process.exit(1);
     }
-    
+
     // Procesar datos
     const processedCards = new Map<string, CollectionCard>();
     let processedRows = 0;
     let skippedRows = 0;
-    
+
     dataRows.forEach((row: any[], index: number) => {
       try {
         // Crear objeto con mapeo de cabeceras
@@ -177,18 +177,18 @@ async function importCollection() {
             rowData[mappedField] = row[colIndex] || '';
           }
         });
-        
+
         // Validar datos esenciales
         if (!rowData.name || !rowData.baseCardId || !rowData.set) {
           skippedRows++;
           return;
         }
-        
+
         const set = rowData.set.toLowerCase().trim();
         const baseCardId = rowData.baseCardId.toString().trim();
         const name = rowData.name.trim();
         const swudbId = `${set}-${baseCardId}`;
-        
+
         // Calcular variantes
         const variants: CardVariants = {
           normal: safeNumber(rowData.normal),
@@ -204,9 +204,9 @@ async function importCollection() {
           foil_prestige: safeNumber(rowData.foil_prestige),
           serialized_prestige: safeNumber(rowData.serialized_prestige)
         };
-        
+
         const totalQuantity = Object.values(variants).reduce((sum, qty) => sum + qty, 0);
-        
+
         // Solo procesar si tiene cantidad > 0
         if (totalQuantity > 0) {
           if (processedCards.has(swudbId)) {
@@ -232,50 +232,50 @@ async function importCollection() {
         } else {
           skippedRows++;
         }
-        
+
       } catch (error) {
         console.error(`❌ Error procesando fila ${index + 2}:`, error);
         skippedRows++;
       }
     });
-    
+
     const cards = Array.from(processedCards.values());
-    
+
     console.log(`✅ Procesadas ${processedRows} filas válidas`);
     console.log(`⚠️ Omitidas ${skippedRows} filas (sin cantidad o datos inválidos)`);
     console.log(`🎯 Total de cartas únicas: ${cards.length}`);
-    
+
     // Guardar como JSON para usar en el backend
     const outputPath = path.resolve(__dirname, '../src/data/collection.json');
     const outputDir = path.dirname(outputPath);
-    
+
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
-    
+
     fs.writeFileSync(outputPath, JSON.stringify(cards, null, 2));
-    
+
     console.log('💾 Colección guardada en:', outputPath);
     console.log('🎉 Importación completada exitosamente!');
-    
+
     // Mostrar estadísticas
     const stats = {
       totalCards: cards.length,
       totalQuantity: cards.reduce((sum, card) => sum + card.totalQuantity, 0),
       sets: [...new Set(cards.map(card => card.set))].filter(Boolean),
     };
-    
+
     console.log('📊 Estadísticas de la colección:');
     console.log(`   - Total de cartas únicas: ${stats.totalCards}`);
     console.log(`   - Total de cartas físicas: ${stats.totalQuantity}`);
     console.log(`   - Sets: ${stats.sets.join(', ')}`);
-    
+
     return {
       success: true,
       processed: cards.length,
       total: processedRows + skippedRows
     };
-    
+
   } catch (error: any) {
     console.error('❌ Error importando colección:', error);
     return {

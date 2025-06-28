@@ -5,8 +5,8 @@ import { connectToDatabase, disconnectFromDatabase, clearDatabase } from '../src
  */
 beforeAll(async () => {
   // Configuramos variables de entorno para tests
-  process.env.NODE_ENV = 'test';
-  process.env.MONGODB_TEST_URI = 'mongodb://localhost:27017/holocron-swu-test';
+  process.env['NODE_ENV'] = 'test';
+  process.env['MONGODB_TEST_URI'] = 'mongodb://localhost:27017/holocron-swu-test';
 
   // Conectamos a la base de datos de test
   await connectToDatabase();
