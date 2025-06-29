@@ -1,7 +1,8 @@
-import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
+// TODO: Reactivar cuando se reintegre react-native-vision-camera
+// import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import { launchImageLibrary, ImagePickerResponse, MediaType } from 'react-native-image-picker';
 import { ScanResult, CameraConfig } from '../types';
-import ApiService from './api';
+import { apiService } from './apiService';
 
 class CameraService {
   private config: CameraConfig = {
@@ -24,18 +25,23 @@ class CameraService {
   // Verificar permisos de cámara
   async checkCameraPermissions(): Promise<boolean> {
     try {
-      const permission = await Camera.getCameraPermissionStatus();
-      if (permission === 'granted') {
-        return true;
-      }
+      // TODO: Reactivar cuando se reintegre react-native-vision-camera
+      // const permission = await Camera.getCameraPermissionStatus();
+      // if (permission === 'granted') {
+      //   return true;
+      // }
 
-      const newPermission = await Camera.requestCameraPermission();
-      return newPermission === 'granted';
+      // const newPermission = await Camera.requestCameraPermission();
+      // return newPermission === 'granted';
+      
+      // Temporalmente devolver true para evitar errores
+      console.warn('Camera permissions check disabled - using image picker only');
+      return true;
     } catch (error) {
       console.error('Error checking camera permissions:', error);
       return false;
     }
-  }
+  };
 
   // Tomar foto para escanear carta
   async captureCardImage(): Promise<string | null> {
@@ -85,11 +91,20 @@ class CameraService {
     try {
       const startTime = Date.now();
 
-      // Enviar imagen al backend para procesamiento
-      const response = await ApiService.scanCard(imageBase64);
-
+      // TODO: Implementar escaneo de cartas cuando se reintegre la funcionalidad de cámara
+      // const response = await apiService.scanCard(imageBase64);
+      
       const processingTime = Date.now() - startTime;
+      
+      // Funcionalidad de escaneo temporalmente deshabilitada
+      return {
+        card: null,
+        confidence: 0,
+        processingTime,
+        imageBase64,
+      };
 
+      /* 
       if (response.success && response.data) {
         return {
           ...response.data,
@@ -104,6 +119,7 @@ class CameraService {
           imageBase64,
         };
       }
+      */
     } catch (error) {
       console.error('Error processing image:', error);
       return {

@@ -33,15 +33,13 @@
     "react-native-progress": "^5.0.1",
     "react-native-safe-area-context": "^5.5.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-vision-camera": "^4.7.0",
-    "react-native-worklets-core": "^1.5.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "^18.0.0",
+    "@react-native-community/cli": "latest",
     "@react-native-community/cli-platform-android": "^19.0.0",
     "@react-native-community/cli-platform-ios": "19.0.0",
     "@react-native/babel-preset": "0.80.0",

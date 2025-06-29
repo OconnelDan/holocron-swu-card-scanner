@@ -1,15 +1,30 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
-// Base configuration for API calls
-const API_BASE_URL = 'http://localhost:3000/api';
+// Base configuration for API calls - auto-detect environment
+const getApiBaseUrl = () => {
+  // En desarrollo, usar la IP correcta para emulador Android
+  if (__DEV__) {
+    const emulatorHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+    return `http://${emulatorHost}:3000/api`;
+  }
+  
+  // En producción, usar fallback a API de producción
+  return 'https://api.holocron.com/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 8000, // 8 segundos timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Log para debugging
+console.log('API Base URL configurada:', API_BASE_URL);
 
 // Types for API responses
 export interface ApiCollectionStats {

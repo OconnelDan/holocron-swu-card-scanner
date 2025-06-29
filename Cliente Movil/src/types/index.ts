@@ -12,6 +12,7 @@ export interface Card {
   aspects?: string[];
   traits?: string[];
   imageUrl?: string;
+  marketPrice?: number; // Precio de mercado opcional
 }
 
 // Tipos para la colección del usuario
@@ -59,6 +60,39 @@ export interface CollectionStats {
   totalCards: number;
   uniqueCards: number;
   completionPercentage: number;
+  totalValue?: number; // Valor total de la colección
   valueEstimate?: number;
   lastUpdated: Date;
+}
+
+// Tipos para sets de cartas
+export interface CardSet {
+  setCode: string;
+  name: string;
+  totalCards: number;
+  ownedCards: number;
+  totalPhysicalCards: number;
+  completionPercentage: number;
+  releaseDate?: Date;
+  description?: string;
+}
+
+// Tipos para navegación entre sets y cartas
+export interface SetStats {
+  overview: {
+    totalCards: number;
+    ownedCards: number;
+    totalPhysicalCards: number;
+    completionPercentage: string;
+  };
+  bySet: CardSet[];
+  byRarity: RarityStats[];
+}
+
+export interface RarityStats {
+  rarity: string;
+  totalCards: number;
+  ownedCards: number;
+  totalPhysicalCards: number;
+  completionPercentage: string;
 }

@@ -15,33 +15,66 @@ export const addTestCardsToCollection = async (): Promise<void> => {
 
     // Crear colección de prueba con IDs que coincidan con el mock del backend
     const testCollection: UserCollection[] = [
+      // Cartas del set SOR
       {
-        cardId: '1', // Luke Skywalker
+        cardId: 'SOR_001', // Luke Skywalker
         quantity: 2,
         dateAdded: new Date(),
         condition: 'Near Mint'
       },
       {
-        cardId: '2', // Darth Vader
+        cardId: 'SOR_002', // Darth Vader
         quantity: 1,
         dateAdded: new Date(),
         condition: 'Mint'
       },
       {
-        cardId: '3', // Millennium Falcon
+        cardId: 'SOR_003', // Princess Leia
         quantity: 1,
         dateAdded: new Date(),
         condition: 'Lightly Played'
       },
       {
-        cardId: '6', // Stormtrooper
+        cardId: 'SOR_005', // Chewbacca
         quantity: 4,
         dateAdded: new Date(),
         condition: 'Near Mint'
       },
       {
-        cardId: '7', // Rebel Trooper
+        cardId: 'SOR_008', // Stormtrooper
         quantity: 3,
+        dateAdded: new Date(),
+        condition: 'Near Mint'
+      },
+      // Cartas del set SHD
+      {
+        cardId: 'SHD_001', // Boba Fett
+        quantity: 1,
+        dateAdded: new Date(),
+        condition: 'Mint'
+      },
+      {
+        cardId: 'SHD_002', // Lando Calrissian
+        quantity: 2,
+        dateAdded: new Date(),
+        condition: 'Near Mint'
+      },
+      {
+        cardId: 'SHD_005', // Gamorrean Guard
+        quantity: 5,
+        dateAdded: new Date(),
+        condition: 'Near Mint'
+      },
+      // Cartas del set TWI
+      {
+        cardId: 'TWI_001', // Anakin Skywalker
+        quantity: 1,
+        dateAdded: new Date(),
+        condition: 'Mint'
+      },
+      {
+        cardId: 'TWI_004', // Clone Trooper
+        quantity: 6,
         dateAdded: new Date(),
         condition: 'Near Mint'
       }
