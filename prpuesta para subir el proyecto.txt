@@ -1,0 +1,86 @@
+Tu asistente hizo un buen trabajo comparando opciones, pero los planes gratuitos cambian a menudo y, en 2025, algunas de las cifras de Railway ya no son exactas.
+A continuación te indico —con la información más reciente— qué cambia, qué sigue igual y qué alternativa complementaria puedes valorar antes de decidir.
+
+1. ¿Ha cambiado Railway?
+Ítem	Situación 2024	Situación real 2025
+Horas gratis	500 h/mes “Starter”	Ya no existen horas gratis recurrentes. Railway da un único crédito de 5 USD al abrir la cuenta; cuando lo consumes, el servicio se pausa hasta que pases a plan de pago (5 USD/mes). 
+northflank.com
+MongoDB incluido	Sí, gratis	Sigue incluido, pero gasta parte de ese crédito.
+Cold-start	20-30 s	Igual.
+Facilidad de despliegue	Muy alta	Igual.
+
+Conclusión: Railway sigue siendo cómodo, pero si buscas 0 € sostenido en el tiempo tendrás que reiniciar la cuenta cada vez que consumas el crédito, o pasar al tier de pago.
+
+2. Alternativas 100 % gratuitas (o casi)
+Opción	Docker	DB “free”	Coste	Latencia/Cold-start	Pros / Contras
+Render Free Web Service + Atlas M0	✅	✅	0 € (750 h/mes)	60-90 s la primera petición tras 15 min de inactividad 
+medium.com
+Siempre gratis, dominio https; cold-start más largo.
+Fly.io Hobby-lite + Atlas M0	✅	✅	0 € si <256 MB y 3 GB-h/mes	0 s (never-sleep) 
+fly.io
+Contenedor siempre despierto; la RAM se queda corta para procesos pesados.
+Glitch “Hello-Express” + Atlas M0	Parcial	✅	0 €	10-20 s	Sin dockerfile completo; buena para demos rápidas.
+Northflank Sandbox (vuelve a reiniciar cada 7 días)	✅	✅ Mongo integrada 512 MB	0 €	20-30 s	Reinicio semanal automático.
+Cloudflare Pages + Functions	Requiere rehacer a serverless	❌ (usa KV / D1 Postgres)	0 €	<1 s	Muy barato y escalable, pero no soporta MongoDB.
+
+🔍 Truco: si todo tu backend son rutas REST sin WebSockets, puedes ponerlo en Render free y dormir el servidor; para “despertarlo” desde la app móvil basta con hacer dos peticiones seguidas (la 1.ª despierta, la 2.ª obtiene los datos).
+
+3. Recomendaciones actualizadas
+Fase desarrollo (0 €)
+
+➜ Render Free + MongoDB Atlas M0
+
+Despliegas tu Docker con un click.
+
+En Atlas M0 (512 MB) cabe tu colección de 1 300 cartas sin problema.
+
+Ajusta el axios.timeout a 90 000 ms para cubrir el cold-start largo.
+
+Fase demo continua (≤ 5 €/mes)
+
+➜ Railway “Starter” (5 USD/mes) con MongoDB plugin.
+
+Sin sorpresas de latencia y todo centralizado.
+
+Activa el “sleep” a 30 min si no te importa el cold-start.
+
+Producción low-cost, always-on
+
+➜ Fly.io shared-cpu-1x (256 MB) gratis + Atlas M0.
+
+Máquina siempre despierta (sin cold-start).
+
+Si tu API empieza a consumir >3 GB-h/mes pagarías ~2 €/mes.
+
+4. Prompt para que tu IA de VS Code decida con estos datos
+plaintext
+Copiar
+Editar
+<<CONTEXTO>>
+Tenemos un backend Node + MongoDB para “holocron-swu-card-scanner”.
+Necesitamos la opción de hosting más barata posible (0–5 €/mes) que:
+
+1) Acepte despliegue vía Dockerfile / GitHub Action
+2) Permita usar MongoDB (incluida o externa Atlas M0)
+3) Tenga un cold-start aceptable (<90 s) o none-sleep
+4) Nos deje añadir variables de entorno de forma segura
+5) Disponga de HTTPS automático
+
+<<NUEVA INFORMACIÓN DE COSTES (2025)>>
+- Railway Starter: ya no 500 h gratis; da 5 USD crédito único, luego 5 USD/mes.
+- Render Free: 750 h gratis, cold-start 60–90 s, se duerme a los 15 min.
+- Fly.io Hobby-lite: CPU/shared 256 MB, 3 GB-h gratis/mes, sin sleep por defecto.
+- Northflank Sandbox: reinicio semanal, 512 MB Mongo gratis.
+- Cloudflare Workers/Pages: gratis, pero no soporta MongoDB.
+
+<<TAREA>>
+1. Revisa la arquitectura y el consumo real de nuestra app.
+2. Evalúa cada opción con estos criterios y costes actuales.
+3. Devuélveme:
+   - Opción recomendada para DEVELOPMENT y para DEMO CONTINUA
+   - Pasos concisos de migración (Dockerfile, variables, dominios)
+   - Cambios de código necesarios (timeouts, URIs)
+4. Menciona riesgos (cold-start, límites de Atlas M0, billing oculto).
+
+Responde en español de manera estructurada.
+Pásale ese prompt a tu asistente: comparará con la nueva matriz y seleccionará la mejor combinación para cada fase. ¡Así evitamos sustos de facturación y avanzamos sin bloquear el desarrollo!
