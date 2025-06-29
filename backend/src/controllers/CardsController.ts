@@ -149,7 +149,7 @@ export class CardsController {  /**
 
       // Obtener todos los sets existentes para incluir TODOS los sets, incluso aquellos con 0 cartas coleccionadas
       const allSets = await Card.distinct('setCode');
-
+      
       // Estadísticas por set (incluyendo sets con 0 cartas coleccionadas)
       const statsBySet = await Promise.all(
         allSets.map(async (setCode) => {

@@ -29,7 +29,7 @@ const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="CollectionOverview"
         screenOptions={{
           headerStyle: {
             backgroundColor: '#1a1a1a',

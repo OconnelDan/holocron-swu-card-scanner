@@ -45,15 +45,14 @@ export const CollectionOverviewScreen: React.FC<Props> = ({ navigation }) => {
   const [isAddPackModalVisible, setIsAddPackModalVisible] = useState(false);
   const [selectedSort, setSelectedSort] = useState<'name' | 'completion' | 'release'>('release');
 
-  const { stats, refreshStats } = useCollectionStats();
+  const { stats, refreshStats, isLoading, error, isUsingRealData } = useCollectionStats();
   const setProgress = useSetProgress();
   const { selectedView, setView } = useCollectionStore();
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    refreshStats();
-    // Simulate API refresh delay
-    setTimeout(() => setRefreshing(false), 1000);
+    await refreshStats();
+    setRefreshing(false);
   };
 
   const handleSetPress = (setCode: string) => {
@@ -197,7 +196,22 @@ export const CollectionOverviewScreen: React.FC<Props> = ({ navigation }) => {
       >
         {/* Header with progress */}
         <View style={styles.header}>
-          <Text style={styles.title}>Mi Colección</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Mi Colección</Text>
+            {isLoading && (
+              <Text style={styles.loadingText}>Cargando datos reales...</Text>
+            )}
+            {error && (
+              <Text style={styles.errorText}>
+                Error: {error} (usando datos mock)
+              </Text>
+            )}
+            {!isLoading && !error && (
+              <Text style={[styles.statusText, { color: isUsingRealData ? '#4CAF50' : '#FF9800' }]}>
+                {isUsingRealData ? '✅ Datos reales conectados' : '⚠️ Usando datos de prueba'}
+              </Text>
+            )}
+          </View>
           <ProgressBar
             progress={stats.completionPercentage}
             height={12}
@@ -245,7 +259,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 4,
+  },
+  titleContainer: {
+    marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#2196F3',
+    fontStyle: 'italic',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#F44336',
+    fontStyle: 'italic',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   mainProgress: {
     marginTop: 8,
